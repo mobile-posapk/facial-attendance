@@ -10,7 +10,13 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Camera Test</title>
+    <title>Facial Attendance System</title>
+
+    <!-- MediaPipe -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"
+        crossorigin="anonymous">
+    </script>
 
     <style>
 
@@ -20,30 +26,137 @@
 
         body {
             margin: 0;
-            background: #111;
+            background: #111827;
             color: white;
             font-family: Arial, sans-serif;
+        }
+
+        header {
+            padding: 15px;
+            background: #1f2937;
             text-align: center;
         }
 
-        h1 {
+        header h1 {
+            margin: 0;
             font-size: 20px;
-            margin: 20px;
+        }
+
+        header p {
+            margin: 5px 0 0;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .scanner {
+            width: 100%;
+            max-width: 900px;
+            margin: auto;
+            padding: 15px;
+        }
+
+        .camera {
+            position: relative;
+            width: 100%;
+            background: black;
+            border-radius: 15px;
+            overflow: hidden;
         }
 
         video {
-            width: 95%;
-            max-width: 800px;
-            border-radius: 15px;
-            background: black;
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+
+            width: 100%;
+            height: 100%;
+
+            pointer-events: none;
+        }
+
+        .status {
+            position: absolute;
+
+            left: 12px;
+            bottom: 12px;
+
+            padding: 8px 14px;
+
+            background: rgba(0,0,0,.7);
+
+            border-radius: 20px;
+
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status.detecting {
+            color: #22c55e;
+        }
+
+        .status.detected {
+            color: #38bdf8;
+        }
+
+        .result {
+            margin-top: 15px;
+
+            padding: 18px;
+
+            background: #1f2937;
+
+            border-radius: 14px;
+
+            text-align: center;
+        }
+
+        .result-title {
+            font-size: 11px;
+            color: #22c55e;
+            font-weight: bold;
+        }
+
+        .face-count {
+            margin-top: 5px;
+
+            font-size: 25px;
+            font-weight: bold;
+        }
+
+        .message {
+            margin-top: 5px;
+
+            color: #9ca3af;
+
+            font-size: 13px;
+        }
+
+        .controls {
+            display: flex;
+
+            gap: 10px;
+
+            margin-top: 15px;
         }
 
         button {
-            margin: 15px 5px;
-            padding: 14px 25px;
+            flex: 1;
+
+            padding: 14px;
+
             border: none;
-            border-radius: 8px;
+
+            border-radius: 9px;
+
             font-weight: bold;
+
+            cursor: pointer;
         }
 
         #start {
@@ -56,57 +169,561 @@
             color: white;
         }
 
-        #status {
-            margin: 15px;
-            font-weight: bold;
+        #switch {
+            background: #374151;
+            color: white;
+        }
+
+        button:disabled {
+            opacity: .4;
+        }
+
+        @media(max-width:600px) {
+
+            .scanner {
+                padding: 10px;
+            }
+
+            .controls {
+                flex-wrap: wrap;
+            }
+
+            #start {
+                flex-basis: 100%;
+            }
+
         }
 
     </style>
 
 </head>
 
+
 <body>
 
+
+<header>
+
     <h1>
-        FACIAL ATTENDANCE CAMERA TEST
+        FACIAL ATTENDANCE SYSTEM
     </h1>
 
-    <video
-        id="video"
-        autoplay
-        playsinline
-        muted
-    ></video>
+    <p>
+        AUTOMATIC FACE DETECTION
+    </p>
 
-    <div id="status">
-        CAMERA NOT STARTED
+</header>
+
+
+<div class="scanner">
+
+
+    <div class="camera">
+
+        <video
+            id="video"
+            autoplay
+            playsinline
+            muted
+        ></video>
+
+
+        <canvas
+            id="canvas"
+        ></canvas>
+
+
+        <div
+            id="status"
+            class="status"
+        >
+            CAMERA OFF
+        </div>
+
     </div>
 
-    <button id="start">
-        START CAMERA
-    </button>
 
-    <button id="stop">
-        STOP CAMERA
-    </button>
+    <div class="result">
+
+        <div class="result-title">
+
+            FACE DETECTION
+
+        </div>
+
+
+        <div
+            id="faceCount"
+            class="face-count"
+        >
+
+            0
+
+        </div>
+
+
+        <div
+            id="message"
+            class="message"
+        >
+
+            Start the scanner.
+
+        </div>
+
+    </div>
+
+
+    <div class="controls">
+
+
+        <button
+            id="start"
+        >
+
+            ▶ START SCANNER
+
+        </button>
+
+
+        <button
+            id="stop"
+            disabled
+        >
+
+            ■ STOP
+
+        </button>
+
+
+        <button
+            id="switch"
+        >
+
+            🔄 CAMERA
+
+        </button>
+
+
+    </div>
+
+
+</div>
 
 
 <script>
 
+
+/* ==========================================
+   VARIABLES
+========================================== */
+
 let stream = null;
 
+let detector = null;
+
+let scanning = false;
+
+let facingMode = "environment";
+
+let animationFrame = null;
+
+
+/* ==========================================
+   ELEMENTS
+========================================== */
 
 const video =
-    document.getElementById("video");
+    document.getElementById(
+        "video"
+    );
 
+const canvas =
+    document.getElementById(
+        "canvas"
+    );
+
+const ctx =
+    canvas.getContext(
+        "2d"
+    );
 
 const status =
-    document.getElementById("status");
+    document.getElementById(
+        "status"
+    );
+
+const faceCount =
+    document.getElementById(
+        "faceCount"
+    );
+
+const message =
+    document.getElementById(
+        "message"
+    );
+
+const startButton =
+    document.getElementById(
+        "start"
+    );
+
+const stopButton =
+    document.getElementById(
+        "stop"
+    );
+
+const switchButton =
+    document.getElementById(
+        "switch"
+    );
 
 
-async function startCamera() {
+/* ==========================================
+   CREATE FACE DETECTOR
+========================================== */
+
+function createDetector() {
+
+    detector =
+        new FaceDetection({
+
+            locateFile: function(file) {
+
+                return (
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/" +
+                    file
+                );
+
+            }
+
+        });
+
+
+    detector.setOptions({
+
+        model: "short",
+
+        minDetectionConfidence: 0.6
+
+    });
+
+
+    detector.onResults(
+        processResults
+    );
+
+}
+
+
+/* ==========================================
+   PROCESS DETECTION RESULTS
+========================================== */
+
+function processResults(results) {
+
+    if(!scanning) {
+        return;
+    }
+
+
+    if(
+        !video.videoWidth ||
+        !video.videoHeight
+    ) {
+        return;
+    }
+
+
+    canvas.width =
+        video.videoWidth;
+
+    canvas.height =
+        video.videoHeight;
+
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    const detections =
+        results.detections || [];
+
+
+    faceCount.textContent =
+        detections.length;
+
+
+    if(
+        detections.length === 0
+    ) {
+
+        status.textContent =
+            "SCANNING...";
+
+        status.className =
+            "status detecting";
+
+        message.textContent =
+            "Looking for faces...";
+
+        return;
+
+    }
+
+
+    status.textContent =
+        "FACE DETECTED";
+
+    status.className =
+        "status detected";
+
+
+    if(
+        detections.length === 1
+    ) {
+
+        message.textContent =
+            "1 face detected.";
+
+    }
+
+    else {
+
+        message.textContent =
+            detections.length +
+            " faces detected.";
+
+    }
+
+
+    /* DRAW FACE BOXES */
+
+    detections.forEach(
+        function(detection) {
+
+            const box =
+                detection.boundingBox;
+
+
+            const x =
+                box.xCenter *
+                canvas.width;
+
+
+            const y =
+                box.yCenter *
+                canvas.height;
+
+
+            const width =
+                box.width *
+                canvas.width;
+
+
+            const height =
+                box.height *
+                canvas.height;
+
+
+            const left =
+                x - width / 2;
+
+
+            const top =
+                y - height / 2;
+
+
+            drawFaceBox(
+                left,
+                top,
+                width,
+                height
+            );
+
+        }
+    );
+
+}
+
+
+/* ==========================================
+   DRAW FACE BOX
+========================================== */
+
+function drawFaceBox(
+    x,
+    y,
+    width,
+    height
+) {
+
+    ctx.strokeStyle =
+        "#22c55e";
+
+    ctx.lineWidth =
+        5;
+
+
+    ctx.strokeRect(
+        x,
+        y,
+        width,
+        height
+    );
+
+
+    /* CORNERS */
+
+    const size = 25;
+
+
+    ctx.lineWidth =
+        7;
+
+
+    /* TOP LEFT */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        x,
+        y + size
+    );
+
+    ctx.lineTo(
+        x,
+        y
+    );
+
+    ctx.lineTo(
+        x + size,
+        y
+    );
+
+    ctx.stroke();
+
+
+    /* TOP RIGHT */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        x + width - size,
+        y
+    );
+
+    ctx.lineTo(
+        x + width,
+        y
+    );
+
+    ctx.lineTo(
+        x + width,
+        y + size
+    );
+
+    ctx.stroke();
+
+
+    /* BOTTOM LEFT */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        x,
+        y + height - size
+    );
+
+    ctx.lineTo(
+        x,
+        y + height
+    );
+
+    ctx.lineTo(
+        x + size,
+        y + height
+    );
+
+    ctx.stroke();
+
+
+    /* BOTTOM RIGHT */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        x + width - size,
+        y + height
+    );
+
+    ctx.lineTo(
+        x + width,
+        y + height
+    );
+
+    ctx.lineTo(
+        x + width,
+        y + height - size
+    );
+
+    ctx.stroke();
+
+}
+
+
+/* ==========================================
+   DETECTION LOOP
+========================================== */
+
+async function detectionLoop() {
+
+    if(!scanning) {
+        return;
+    }
+
+
+    if(
+        video.readyState >= 2 &&
+        detector
+    ) {
+
+        await detector.send({
+            image: video
+        });
+
+    }
+
+
+    animationFrame =
+        requestAnimationFrame(
+            detectionLoop
+        );
+
+}
+
+
+/* ==========================================
+   START CAMERA
+========================================== */
+
+async function startScanner() {
 
     try {
+
+        stopScanner();
+
+
+        if(!detector) {
+
+            createDetector();
+
+        }
+
 
         status.textContent =
             "REQUESTING CAMERA...";
@@ -120,7 +737,7 @@ async function startCamera() {
                     video: {
 
                         facingMode: {
-                            ideal: "environment"
+                            ideal: facingMode
                         },
 
                         width: {
@@ -145,26 +762,48 @@ async function startCamera() {
         await video.play();
 
 
+        scanning = true;
+
+
         status.textContent =
-            "✓ CAMERA IS WORKING";
+            "SCANNING...";
 
 
-        console.log(
-            "Camera stream:",
-            stream
-        );
+        status.className =
+            "status detecting";
+
+
+        message.textContent =
+            "Looking for faces...";
+
+
+        startButton.disabled =
+            true;
+
+
+        stopButton.disabled =
+            false;
+
+
+        detectionLoop();
+
 
     }
 
     catch(error) {
 
-        console.error(error);
+        console.error(
+            error
+        );
 
 
         status.textContent =
-            "CAMERA ERROR: " +
+            "ERROR";
+
+
+        message.textContent =
             error.name +
-            " - " +
+            ": " +
             error.message;
 
     }
@@ -172,7 +811,26 @@ async function startCamera() {
 }
 
 
-function stopCamera() {
+/* ==========================================
+   STOP
+========================================== */
+
+function stopScanner() {
+
+
+    scanning = false;
+
+
+    if(animationFrame) {
+
+        cancelAnimationFrame(
+            animationFrame
+        );
+
+        animationFrame = null;
+
+    }
+
 
     if(stream) {
 
@@ -190,28 +848,98 @@ function stopCamera() {
     video.srcObject = null;
 
 
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
     status.textContent =
-        "CAMERA STOPPED";
+        "CAMERA OFF";
+
+
+    status.className =
+        "status";
+
+
+    faceCount.textContent =
+        "0";
+
+
+    message.textContent =
+        "Start the scanner.";
+
+
+    startButton.disabled =
+        false;
+
+
+    stopButton.disabled =
+        true;
 
 }
 
 
-document
-    .getElementById("start")
-    .addEventListener(
-        "click",
-        startCamera
-    );
+/* ==========================================
+   SWITCH CAMERA
+========================================== */
+
+async function switchCamera() {
 
 
-document
-    .getElementById("stop")
-    .addEventListener(
-        "click",
-        stopCamera
-    );
+    if(
+        facingMode ===
+        "environment"
+    ) {
+
+        facingMode =
+            "user";
+
+    }
+
+    else {
+
+        facingMode =
+            "environment";
+
+    }
+
+
+    if(scanning) {
+
+        await startScanner();
+
+    }
+
+}
+
+
+/* ==========================================
+   EVENTS
+========================================== */
+
+startButton.addEventListener(
+    "click",
+    startScanner
+);
+
+
+stopButton.addEventListener(
+    "click",
+    stopScanner
+);
+
+
+switchButton.addEventListener(
+    "click",
+    switchCamera
+);
+
 
 </script>
+
 
 </body>
 
