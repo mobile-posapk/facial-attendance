@@ -41,7 +41,6 @@ body {
 
 }
 
-
 header {
 
     background: #1f2937;
@@ -502,7 +501,7 @@ FACES DETECTED
     class="message"
 >
 
-Start scanner to begin.
+Loading student database...
 
 </div>
 
@@ -566,12 +565,29 @@ Start scanner to begin.
 </div>
 
 
+
 <script>
+
+
+/************************************************
+ * CONFIGURATION
+ ************************************************/
+
+
+/*
+ * SAME GOOGLE APPS SCRIPT WEB APP
+ * USED BY register.html
+ */
+
+const API_URL =
+    "https://script.google.com/macros/s/AKfycbwZfRqoHRzdQrRbISRQFtBLtIiYg-E82_bzgL1oAY2oMjAKjHTMYcnU0Z5t_YVje9-2Cw/exec";
+
 
 
 /************************************************
  * VARIABLES
  ************************************************/
+
 
 let stream = null;
 
@@ -592,9 +608,11 @@ let faceMatcher = null;
 let modelsLoaded = false;
 
 
+
 /************************************************
  * ELEMENTS
  ************************************************/
+
 
 const video =
     document.getElementById(
@@ -656,9 +674,11 @@ const switchButton =
     );
 
 
+
 /************************************************
  * LOAD MODELS
  ************************************************/
+
 
 async function loadModels() {
 
@@ -703,13 +723,17 @@ async function loadModels() {
 
 
         message.textContent =
-            "AI model loaded successfully.";
+            "Facial recognition ready. Loading students...";
 
 
-        loadRegisteredStudents();
+        /*
+         * LOAD STUDENTS FROM GOOGLE SHEETS
+         */
 
+        await loadRegisteredStudents();
 
     }
+
 
     catch(error) {
 
@@ -728,108 +752,354 @@ async function loadModels() {
 }
 
 
+
 /************************************************
  * LOAD REGISTERED STUDENTS
+ *
+ * NO LOCALSTORAGE
+ *
+ * DATA COMES FROM GOOGLE SHEETS
  ************************************************/
 
-function loadRegisteredStudents() {
 
-    students =
-        JSON.parse(
-            localStorage.getItem(
-                "registeredStudents"
-            ) || "[]"
+async function loadRegisteredStudents() {
+
+    try {
+
+        message.textContent =
+            "Loading students from Google Sheets...";
+
+
+        /*
+         * REQUEST STUDENTS FROM APPS SCRIPT
+         */
+
+        const response =
+            await fetch(
+
+                API_URL,
+
+                {
+
+                    method:
+                        "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "text/plain;charset=utf-8"
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            action:
+                                "getStudents"
+
+                        })
+
+                }
+
+            );
+
+
+        if(
+            !response.ok
+        ) {
+
+            throw new Error(
+                "Server returned HTTP " +
+                response.status
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Google Sheets student response:",
+            data
         );
 
 
-    console.log(
-        "Registered students:",
-        students.length
-    );
+        /*
+         * CHECK RESPONSE
+         */
 
+        if(
+            !data.success
+        ) {
 
-    if(
-        students.length === 0
-    ) {
+            throw new Error(
 
-        message.textContent =
-            "No students registered yet.";
-
-        return;
-
-    }
-
-
-    labeledDescriptors = [];
-
-
-    students.forEach(
-        function(student) {
-
-            if(
-                !student.faceDescriptor ||
-                !Array.isArray(
-                    student.faceDescriptor
-                )
-            ) {
-
-                return;
-
-            }
-
-
-            const descriptor =
-                new Float32Array(
-                    student.faceDescriptor
-                );
-
-
-            labeledDescriptors.push(
-
-                new faceapi.LabeledFaceDescriptors(
-
-                    student.lrn,
-
-                    [descriptor]
-
-                )
+                data.message ||
+                "Unable to load students."
 
             );
 
         }
-    );
 
-
-    if(
-        labeledDescriptors.length > 0
-    ) {
 
         /*
-         * 0.55 is the recognition
-         * distance threshold.
-         *
-         * Lower = stricter.
+         * GET STUDENTS
          */
 
-        faceMatcher =
-            new faceapi.FaceMatcher(
-                labeledDescriptors,
-                0.55
-            );
+        students =
+            Array.isArray(data.students)
+            ? data.students
+            : [];
+
+
+        console.log(
+            "Students loaded:",
+            students.length
+        );
+
+
+        /*
+         * NO STUDENTS
+         */
+
+        if(
+            students.length === 0
+        ) {
+
+            labeledDescriptors = [];
+
+            faceMatcher = null;
+
+
+            message.textContent =
+                "No students registered in Google Sheets.";
+
+
+            return;
+
+        }
+
+
+        /*
+         * RESET DESCRIPTORS
+         */
+
+        labeledDescriptors = [];
+
+
+        /*
+         * BUILD FACE DESCRIPTORS
+         */
+
+        students.forEach(
+
+            function(student) {
+
+
+                /*
+                 * SUPPORT BOTH
+                 *
+                 * faceDescriptor
+                 *
+                 * AND
+                 *
+                 * faceDescriptors
+                 */
+
+                let descriptors =
+                    student.faceDescriptors ||
+                    student.faceDescriptor;
+
+
+                /*
+                 * IF STRING, PARSE JSON
+                 */
+
+                if(
+                    typeof descriptors ===
+                    "string"
+                ) {
+
+                    try {
+
+                        descriptors =
+                            JSON.parse(
+                                descriptors
+                            );
+
+                    }
+
+                    catch(error) {
+
+                        console.warn(
+                            "Invalid descriptor for:",
+                            student.lrn
+                        );
+
+                        return;
+
+                    }
+
+                }
+
+
+                /*
+                 * SINGLE DESCRIPTOR
+                 */
+
+                if(
+                    Array.isArray(descriptors) &&
+                    descriptors.length > 0 &&
+                    typeof descriptors[0] === "number"
+                ) {
+
+                    descriptors = [
+                        descriptors
+                    ];
+
+                }
+
+
+                /*
+                 * NO VALID DESCRIPTOR
+                 */
+
+                if(
+                    !Array.isArray(descriptors) ||
+                    descriptors.length === 0
+                ) {
+
+                    return;
+
+                }
+
+
+                /*
+                 * CONVERT EACH DESCRIPTOR
+                 */
+
+                const descriptorArrays =
+                    descriptors
+                        .filter(
+                            descriptor =>
+                                Array.isArray(
+                                    descriptor
+                                ) &&
+                                descriptor.length > 0
+                        )
+                        .map(
+
+                            descriptor =>
+                                new Float32Array(
+                                    descriptor
+                                )
+
+                        );
+
+
+                if(
+                    descriptorArrays.length === 0
+                ) {
+
+                    return;
+
+                }
+
+
+                /*
+                 * ADD TO FACE MATCHER
+                 */
+
+                labeledDescriptors.push(
+
+                    new faceapi.LabeledFaceDescriptors(
+
+                        String(
+                            student.lrn
+                        ),
+
+                        descriptorArrays
+
+                    )
+
+                );
+
+            }
+
+        );
+
+
+        /*
+         * CREATE FACE MATCHER
+         */
+
+        if(
+            labeledDescriptors.length > 0
+        ) {
+
+            faceMatcher =
+                new faceapi.FaceMatcher(
+
+                    labeledDescriptors,
+
+                    0.55
+
+                );
+
+        }
+
+        else {
+
+            faceMatcher =
+                null;
+
+        }
+
+
+        /*
+         * SHOW REAL DATABASE COUNT
+         */
+
+        message.textContent =
+
+            students.length +
+
+            " student(s) registered in Google Sheets.";
 
     }
 
 
-    message.textContent =
-        students.length +
-        " student(s) registered.";
+    catch(error) {
+
+        console.error(
+            "Student loading error:",
+            error
+        );
+
+
+        students = [];
+
+        labeledDescriptors = [];
+
+        faceMatcher = null;
+
+
+        message.textContent =
+
+            "Unable to load students from Google Sheets.";
+
+    }
 
 }
+
 
 
 /************************************************
  * START CAMERA
  ************************************************/
+
 
 async function startScanner() {
 
@@ -838,16 +1108,34 @@ async function startScanner() {
         stopScanner();
 
 
-        if(!modelsLoaded) {
+        if(
+            !modelsLoaded
+        ) {
 
             await loadModels();
 
         }
 
 
-        if(!modelsLoaded) {
+        if(
+            !modelsLoaded
+        ) {
 
             return;
+
+        }
+
+
+        /*
+         * MAKE SURE STUDENT DATABASE
+         * IS AVAILABLE
+         */
+
+        if(
+            students.length === 0
+        ) {
+
+            await loadRegisteredStudents();
 
         }
 
@@ -904,6 +1192,7 @@ async function startScanner() {
         status.textContent =
             "SCANNING";
 
+
         status.className =
             "status scanning";
 
@@ -922,8 +1211,8 @@ async function startScanner() {
 
         detectionLoop();
 
-
     }
+
 
     catch(error) {
 
@@ -944,13 +1233,17 @@ async function startScanner() {
 }
 
 
+
 /************************************************
  * DETECTION LOOP
  ************************************************/
 
+
 async function detectionLoop() {
 
-    if(!scanning) {
+    if(
+        !scanning
+    ) {
 
         detectionLoopRunning =
             false;
@@ -960,25 +1253,34 @@ async function detectionLoop() {
     }
 
 
-    if(detectionLoopRunning) {
+    if(
+        detectionLoopRunning
+    ) {
 
         return;
 
     }
 
 
-    detectionLoopRunning = true;
+    detectionLoopRunning =
+        true;
 
 
     try {
 
         if(
+
             video.readyState >= 2 &&
+
             video.videoWidth > 0
+
         ) {
 
+
             const detections =
+
                 await faceapi
+
                     .detectAllFaces(
 
                         video,
@@ -986,14 +1288,18 @@ async function detectionLoop() {
                         new faceapi
                             .TinyFaceDetectorOptions({
 
-                                inputSize: 320,
+                                inputSize:
+                                    320,
 
-                                scoreThreshold: 0.5
+                                scoreThreshold:
+                                    0.5
 
                             })
 
                     )
+
                     .withFaceLandmarks()
+
                     .withFaceDescriptors();
 
 
@@ -1010,6 +1316,7 @@ async function detectionLoop() {
 
     }
 
+
     catch(error) {
 
         console.error(
@@ -1024,7 +1331,9 @@ async function detectionLoop() {
         false;
 
 
-    if(scanning) {
+    if(
+        scanning
+    ) {
 
         animationFrame =
             requestAnimationFrame(
@@ -1036,9 +1345,11 @@ async function detectionLoop() {
 }
 
 
+
 /************************************************
  * DRAW RESULTS
  ************************************************/
+
 
 function drawResults(
     detections
@@ -1053,10 +1364,13 @@ function drawResults(
 
 
     ctx.clearRect(
+
         0,
         0,
+
         canvas.width,
         canvas.height
+
     );
 
 
@@ -1071,8 +1385,10 @@ function drawResults(
         status.textContent =
             "SCANNING";
 
+
         status.className =
             "status scanning";
+
 
         return;
 
@@ -1080,13 +1396,19 @@ function drawResults(
 
 
     status.textContent =
+
         detections.length +
+
         " FACE" +
+
         (
+
             detections.length > 1
             ? "S"
             : ""
+
         ) +
+
         " DETECTED";
 
 
@@ -1095,6 +1417,7 @@ function drawResults(
 
 
     detections.forEach(
+
         function(detection) {
 
             const box =
@@ -1104,11 +1427,14 @@ function drawResults(
             const x =
                 box.x;
 
+
             const y =
                 box.y;
 
+
             const width =
                 box.width;
+
 
             const height =
                 box.height;
@@ -1123,27 +1449,34 @@ function drawResults(
 
 
             ctx.strokeRect(
+
                 x,
                 y,
+
                 width,
                 height
+
             );
 
         }
+
     );
 
 }
+
 
 
 /************************************************
  * RECOGNIZE STUDENTS
  ************************************************/
 
+
 function recognizeStudents(
     detections
 ) {
 
-    results.innerHTML = "";
+    results.innerHTML =
+        "";
 
 
     if(
@@ -1153,32 +1486,41 @@ function recognizeStudents(
         message.textContent =
             "Looking for students...";
 
+
         return;
 
     }
 
 
     detections.forEach(
+
         function(detection) {
 
+            let bestMatch =
+                null;
 
-            let bestMatch = null;
 
-
-            if(faceMatcher) {
+            if(
+                faceMatcher
+            ) {
 
                 bestMatch =
                     faceMatcher.findBestMatch(
+
                         detection.descriptor
+
                     );
 
             }
 
 
             if(
+
                 !bestMatch ||
+
                 bestMatch.label ===
                 "unknown"
+
             ) {
 
                 showUnknown();
@@ -1190,16 +1532,25 @@ function recognizeStudents(
 
             const student =
                 students.find(
+
                     function(s) {
 
-                        return String(s.lrn) ===
-                            String(bestMatch.label);
+                        return String(
+                            s.lrn
+                        ) ===
+
+                        String(
+                            bestMatch.label
+                        );
 
                     }
+
                 );
 
 
-            if(!student) {
+            if(
+                !student
+            ) {
 
                 showUnknown();
 
@@ -1213,37 +1564,52 @@ function recognizeStudents(
 
 
             /*
-             * Convert distance to an
+             * Convert distance to
              * approximate similarity.
              */
 
             let similarity =
+
                 Math.max(
+
                     0,
+
                     Math.min(
+
                         100,
+
                         Math.round(
+
                             (1 - distance) *
                             100
+
                         )
+
                     )
+
                 );
 
 
             showStudent(
+
                 student,
+
                 similarity
+
             );
 
         }
+
     );
 
 }
 
 
+
 /************************************************
  * SHOW STUDENT
  ************************************************/
+
 
 function showStudent(
     student,
@@ -1274,11 +1640,16 @@ function showStudent(
 
             <div class="student-details">
 
-                LRN: ${escapeHTML(student.lrn)}
+                LRN:
+                ${escapeHTML(student.lrn)}
+
                 <br>
 
-                Grade ${escapeHTML(student.grade)}
+                Grade
+                ${escapeHTML(student.grade)}
+
                 -
+
                 ${escapeHTML(student.section)}
 
             </div>
@@ -1305,9 +1676,11 @@ function showStudent(
 }
 
 
+
 /************************************************
  * SHOW UNKNOWN
  ************************************************/
+
 
 function showUnknown() {
 
@@ -1351,43 +1724,57 @@ function showUnknown() {
 }
 
 
+
 /************************************************
  * STOP SCANNER
  ************************************************/
 
+
 function stopScanner() {
 
-    scanning = false;
+    scanning =
+        false;
 
 
     detectionLoopRunning =
         false;
 
 
-    if(animationFrame) {
+    if(
+        animationFrame
+    ) {
 
         cancelAnimationFrame(
             animationFrame
         );
 
-        animationFrame = null;
+
+        animationFrame =
+            null;
 
     }
 
 
-    if(stream) {
+    if(
+        stream
+    ) {
 
         stream
+
             .getTracks()
+
             .forEach(
+
                 track =>
                     track.stop()
+
             );
 
     }
 
 
-    stream = null;
+    stream =
+        null;
 
 
     video.srcObject =
@@ -1395,10 +1782,13 @@ function stopScanner() {
 
 
     ctx.clearRect(
+
         0,
         0,
+
         canvas.width,
         canvas.height
+
     );
 
 
@@ -1415,7 +1805,9 @@ function stopScanner() {
 
 
     message.textContent =
-        "Start scanner to begin.";
+        students.length +
+
+        " student(s) registered in Google Sheets.";
 
 
     results.innerHTML =
@@ -1432,15 +1824,19 @@ function stopScanner() {
 }
 
 
+
 /************************************************
  * SWITCH CAMERA
  ************************************************/
 
+
 async function switchCamera() {
 
     if(
+
         facingMode ===
         "environment"
+
     ) {
 
         facingMode =
@@ -1456,7 +1852,9 @@ async function switchCamera() {
     }
 
 
-    if(scanning) {
+    if(
+        scanning
+    ) {
 
         await startScanner();
 
@@ -1465,9 +1863,11 @@ async function switchCamera() {
 }
 
 
+
 /************************************************
  * HTML SAFETY
  ************************************************/
+
 
 function escapeHTML(
     value
@@ -1503,35 +1903,50 @@ function escapeHTML(
 }
 
 
+
 /************************************************
  * EVENTS
  ************************************************/
 
+
 startButton.addEventListener(
+
     "click",
+
     startScanner
+
 );
 
 
 stopButton.addEventListener(
+
     "click",
+
     stopScanner
+
 );
 
 
 switchButton.addEventListener(
+
     "click",
+
     switchCamera
+
 );
+
 
 
 /************************************************
  * INITIALIZE
  ************************************************/
 
+
 loadModels();
 
+
 </script>
+
 
 </body>
 
