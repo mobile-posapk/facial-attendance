@@ -3,198 +3,427 @@
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-    <title>Facial Attendance System</title>
+<title>Facial Attendance Scanner</title>
 
-    <!-- MediaPipe -->
-    <script
-        src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"
-        crossorigin="anonymous">
-    </script>
 
-    <style>
+<!-- FACE API -->
 
-        * {
-            box-sizing: border-box;
-        }
+<script
+src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js">
+</script>
 
-        body {
-            margin: 0;
-            background: #111827;
-            color: white;
-            font-family: Arial, sans-serif;
-        }
 
-        header {
-            padding: 15px;
-            background: #1f2937;
-            text-align: center;
-        }
+<style>
 
-        header h1 {
-            margin: 0;
-            font-size: 20px;
-        }
+* {
+    box-sizing: border-box;
+}
 
-        header p {
-            margin: 5px 0 0;
-            color: #9ca3af;
-            font-size: 12px;
-        }
+body {
 
-        .scanner {
-            width: 100%;
-            max-width: 900px;
-            margin: auto;
-            padding: 15px;
-        }
+    margin: 0;
 
-        .camera {
-            position: relative;
-            width: 100%;
-            background: black;
-            border-radius: 15px;
-            overflow: hidden;
-        }
+    background: #111827;
 
-        video {
-            display: block;
-            width: 100%;
-            height: auto;
-        }
+    color: white;
 
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
 
-            width: 100%;
-            height: 100%;
+}
 
-            pointer-events: none;
-        }
 
-        .status {
-            position: absolute;
+header {
 
-            left: 12px;
-            bottom: 12px;
+    background: #1f2937;
 
-            padding: 8px 14px;
+    padding: 16px;
 
-            background: rgba(0,0,0,.7);
+    text-align: center;
 
-            border-radius: 20px;
+}
 
-            font-size: 12px;
-            font-weight: bold;
-        }
+header h1 {
 
-        .status.detecting {
-            color: #22c55e;
-        }
+    margin: 0;
 
-        .status.detected {
-            color: #38bdf8;
-        }
+    font-size: 20px;
 
-        .result {
-            margin-top: 15px;
+}
 
-            padding: 18px;
+header p {
 
-            background: #1f2937;
+    margin: 5px 0 0;
 
-            border-radius: 14px;
+    font-size: 11px;
 
-            text-align: center;
-        }
+    color: #9ca3af;
 
-        .result-title {
-            font-size: 11px;
-            color: #22c55e;
-            font-weight: bold;
-        }
+}
 
-        .face-count {
-            margin-top: 5px;
 
-            font-size: 25px;
-            font-weight: bold;
-        }
+.container {
 
-        .message {
-            margin-top: 5px;
+    max-width: 1000px;
 
-            color: #9ca3af;
+    margin: auto;
 
-            font-size: 13px;
-        }
+    padding: 12px;
 
-        .controls {
-            display: flex;
+}
 
-            gap: 10px;
 
-            margin-top: 15px;
-        }
+/* CAMERA */
 
-        button {
-            flex: 1;
+.camera {
 
-            padding: 14px;
+    position: relative;
 
-            border: none;
+    width: 100%;
 
-            border-radius: 9px;
+    background: black;
 
-            font-weight: bold;
+    border-radius: 16px;
 
-            cursor: pointer;
-        }
+    overflow: hidden;
 
-        #start {
-            background: #16a34a;
-            color: white;
-        }
+}
 
-        #stop {
-            background: #dc2626;
-            color: white;
-        }
 
-        #switch {
-            background: #374151;
-            color: white;
-        }
+video {
 
-        button:disabled {
-            opacity: .4;
-        }
+    display: block;
 
-        @media(max-width:600px) {
+    width: 100%;
 
-            .scanner {
-                padding: 10px;
-            }
+    height: auto;
 
-            .controls {
-                flex-wrap: wrap;
-            }
+}
 
-            #start {
-                flex-basis: 100%;
-            }
 
-        }
+canvas {
 
-    </style>
+    position: absolute;
+
+    top: 0;
+
+    left: 0;
+
+    width: 100%;
+
+    height: 100%;
+
+    pointer-events: none;
+
+}
+
+
+.status {
+
+    position: absolute;
+
+    left: 12px;
+
+    bottom: 12px;
+
+    padding: 8px 14px;
+
+    border-radius: 20px;
+
+    background:
+        rgba(0,0,0,.75);
+
+    font-size: 11px;
+
+    font-weight: bold;
+
+}
+
+
+.status.ready {
+
+    color: #facc15;
+
+}
+
+
+.status.scanning {
+
+    color: #22c55e;
+
+}
+
+
+.status.detected {
+
+    color: #38bdf8;
+
+}
+
+
+/* INFO */
+
+.info {
+
+    margin-top: 12px;
+
+    padding: 16px;
+
+    background: #1f2937;
+
+    border-radius: 14px;
+
+}
+
+
+.info-title {
+
+    color: #9ca3af;
+
+    font-size: 11px;
+
+}
+
+
+.face-count {
+
+    font-size: 28px;
+
+    font-weight: bold;
+
+    margin-top: 3px;
+
+}
+
+
+.message {
+
+    color: #9ca3af;
+
+    font-size: 12px;
+
+    margin-top: 3px;
+
+}
+
+
+/* STUDENT RESULTS */
+
+.results {
+
+    margin-top: 12px;
+
+}
+
+
+.student {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 13px;
+
+    margin-bottom: 8px;
+
+    border-radius: 12px;
+
+    background: #1f2937;
+
+}
+
+
+.student-icon {
+
+    width: 48px;
+
+    height: 48px;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    border-radius: 50%;
+
+    background: #374151;
+
+    font-size: 22px;
+
+}
+
+
+.student-info {
+
+    flex: 1;
+
+}
+
+
+.student-name {
+
+    font-size: 16px;
+
+    font-weight: bold;
+
+}
+
+
+.student-details {
+
+    margin-top: 3px;
+
+    color: #9ca3af;
+
+    font-size: 11px;
+
+}
+
+
+.match {
+
+    font-size: 11px;
+
+    font-weight: bold;
+
+    color: #4ade80;
+
+}
+
+
+.unknown {
+
+    color: #facc15;
+
+}
+
+
+/* BUTTONS */
+
+.controls {
+
+    display: flex;
+
+    gap: 8px;
+
+    margin-top: 12px;
+
+}
+
+
+button {
+
+    flex: 1;
+
+    padding: 14px;
+
+    border: none;
+
+    border-radius: 9px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+}
+
+
+#start {
+
+    background: #16a34a;
+
+    color: white;
+
+}
+
+
+#stop {
+
+    background: #dc2626;
+
+    color: white;
+
+}
+
+
+#switch {
+
+    background: #374151;
+
+    color: white;
+
+}
+
+
+button:disabled {
+
+    opacity: .4;
+
+}
+
+
+/* REGISTER LINK */
+
+.register {
+
+    display: block;
+
+    margin-top: 12px;
+
+    padding: 13px;
+
+    text-align: center;
+
+    text-decoration: none;
+
+    color: white;
+
+    background: #374151;
+
+    border-radius: 9px;
+
+    font-size: 13px;
+
+    font-weight: bold;
+
+}
+
+
+@media(max-width:600px) {
+
+    .container {
+
+        padding: 8px;
+
+    }
+
+    .controls {
+
+        flex-wrap: wrap;
+
+    }
+
+    #start {
+
+        flex-basis: 100%;
+
+    }
+
+}
+
+</style>
 
 </head>
 
@@ -204,108 +433,134 @@
 
 <header>
 
-    <h1>
-        FACIAL ATTENDANCE SYSTEM
-    </h1>
+<h1>
+FACIAL ATTENDANCE SCANNER
+</h1>
 
-    <p>
-        AUTOMATIC FACE DETECTION
-    </p>
+<p>
+AUTOMATIC STUDENT RECOGNITION
+</p>
 
 </header>
 
 
-<div class="scanner">
+<div class="container">
 
 
-    <div class="camera">
+<!-- CAMERA -->
 
-        <video
-            id="video"
-            autoplay
-            playsinline
-            muted
-        ></video>
+<div class="camera">
 
-
-        <canvas
-            id="canvas"
-        ></canvas>
+<video
+    id="video"
+    autoplay
+    muted
+    playsinline
+></video>
 
 
-        <div
-            id="status"
-            class="status"
-        >
-            CAMERA OFF
-        </div>
-
-    </div>
+<canvas
+    id="canvas"
+></canvas>
 
 
-    <div class="result">
+<div
+    id="status"
+    class="status ready"
+>
 
-        <div class="result-title">
+CAMERA OFF
 
-            FACE DETECTION
+</div>
 
-        </div>
-
-
-        <div
-            id="faceCount"
-            class="face-count"
-        >
-
-            0
-
-        </div>
+</div>
 
 
-        <div
-            id="message"
-            class="message"
-        >
+<!-- INFORMATION -->
 
-            Start the scanner.
+<div class="info">
 
-        </div>
+<div class="info-title">
 
-    </div>
+FACES DETECTED
 
-
-    <div class="controls">
+</div>
 
 
-        <button
-            id="start"
-        >
+<div
+    id="faceCount"
+    class="face-count"
+>
 
-            ▶ START SCANNER
+0
 
-        </button>
-
-
-        <button
-            id="stop"
-            disabled
-        >
-
-            ■ STOP
-
-        </button>
+</div>
 
 
-        <button
-            id="switch"
-        >
+<div
+    id="message"
+    class="message"
+>
 
-            🔄 CAMERA
+Start scanner to begin.
 
-        </button>
+</div>
+
+</div>
 
 
-    </div>
+<!-- RESULTS -->
+
+<div
+    id="results"
+    class="results"
+></div>
+
+
+<!-- CONTROLS -->
+
+<div class="controls">
+
+
+<button
+    id="start"
+>
+
+▶ START SCANNER
+
+</button>
+
+
+<button
+    id="stop"
+    disabled
+>
+
+■ STOP
+
+</button>
+
+
+<button
+    id="switch"
+>
+
+🔄 CAMERA
+
+</button>
+
+
+</div>
+
+
+<a
+    href="register.html"
+    class="register"
+>
+
+＋ REGISTER NEW STUDENT
+
+</a>
 
 
 </div>
@@ -314,64 +569,86 @@
 <script>
 
 
-/* ==========================================
-   VARIABLES
-========================================== */
+/************************************************
+ * VARIABLES
+ ************************************************/
 
 let stream = null;
 
-let detector = null;
-
 let scanning = false;
+
+let detectionLoopRunning = false;
 
 let facingMode = "environment";
 
 let animationFrame = null;
 
+let students = [];
 
-/* ==========================================
-   ELEMENTS
-========================================== */
+let labeledDescriptors = [];
+
+let faceMatcher = null;
+
+let modelsLoaded = false;
+
+
+/************************************************
+ * ELEMENTS
+ ************************************************/
 
 const video =
     document.getElementById(
         "video"
     );
 
+
 const canvas =
     document.getElementById(
         "canvas"
     );
+
 
 const ctx =
     canvas.getContext(
         "2d"
     );
 
+
 const status =
     document.getElementById(
         "status"
     );
+
 
 const faceCount =
     document.getElementById(
         "faceCount"
     );
 
+
 const message =
     document.getElementById(
         "message"
     );
+
+
+const results =
+    document.getElementById(
+        "results"
+    );
+
 
 const startButton =
     document.getElementById(
         "start"
     );
 
+
 const stopButton =
     document.getElementById(
         "stop"
     );
+
 
 const switchButton =
     document.getElementById(
@@ -379,337 +656,180 @@ const switchButton =
     );
 
 
-/* ==========================================
-   CREATE FACE DETECTOR
-========================================== */
+/************************************************
+ * LOAD MODELS
+ ************************************************/
 
-function createDetector() {
+async function loadModels() {
 
-    detector =
-        new FaceDetection({
-
-            locateFile: function(file) {
-
-                return (
-                    "https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/" +
-                    file
-                );
-
-            }
-
-        });
+    status.textContent =
+        "LOADING AI...";
 
 
-    detector.setOptions({
-
-        model: "short",
-
-        minDetectionConfidence: 0.6
-
-    });
+    message.textContent =
+        "Loading facial recognition model...";
 
 
-    detector.onResults(
-        processResults
-    );
+    try {
+
+        const MODEL_URL =
+            "https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights";
+
+
+        await faceapi.nets.tinyFaceDetector.loadFromUri(
+            MODEL_URL
+        );
+
+
+        await faceapi.nets.faceLandmark68Net.loadFromUri(
+            MODEL_URL
+        );
+
+
+        await faceapi.nets.faceRecognitionNet.loadFromUri(
+            MODEL_URL
+        );
+
+
+        modelsLoaded = true;
+
+
+        status.textContent =
+            "READY";
+
+
+        status.className =
+            "status ready";
+
+
+        message.textContent =
+            "AI model loaded successfully.";
+
+
+        loadRegisteredStudents();
+
+
+    }
+
+    catch(error) {
+
+        console.error(error);
+
+
+        status.textContent =
+            "AI ERROR";
+
+
+        message.textContent =
+            "Unable to load recognition model.";
+
+    }
 
 }
 
 
-/* ==========================================
-   PROCESS DETECTION RESULTS
-========================================== */
+/************************************************
+ * LOAD REGISTERED STUDENTS
+ ************************************************/
 
-function processResults(results) {
+function loadRegisteredStudents() {
 
-    if(!scanning) {
-        return;
-    }
-
-
-    if(
-        !video.videoWidth ||
-        !video.videoHeight
-    ) {
-        return;
-    }
+    students =
+        JSON.parse(
+            localStorage.getItem(
+                "registeredStudents"
+            ) || "[]"
+        );
 
 
-    canvas.width =
-        video.videoWidth;
-
-    canvas.height =
-        video.videoHeight;
-
-
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
+    console.log(
+        "Registered students:",
+        students.length
     );
 
 
-    const detections =
-        results.detections || [];
-
-
-    faceCount.textContent =
-        detections.length;
-
-
     if(
-        detections.length === 0
+        students.length === 0
     ) {
 
-        status.textContent =
-            "SCANNING...";
-
-        status.className =
-            "status detecting";
-
         message.textContent =
-            "Looking for faces...";
+            "No students registered yet.";
 
         return;
 
     }
 
 
-    status.textContent =
-        "FACE DETECTED";
-
-    status.className =
-        "status detected";
+    labeledDescriptors = [];
 
 
-    if(
-        detections.length === 1
-    ) {
+    students.forEach(
+        function(student) {
 
-        message.textContent =
-            "1 face detected.";
+            if(
+                !student.faceDescriptor ||
+                !Array.isArray(
+                    student.faceDescriptor
+                )
+            ) {
 
-    }
+                return;
 
-    else {
-
-        message.textContent =
-            detections.length +
-            " faces detected.";
-
-    }
+            }
 
 
-    /* DRAW FACE BOXES */
-
-    detections.forEach(
-        function(detection) {
-
-            const box =
-                detection.boundingBox;
+            const descriptor =
+                new Float32Array(
+                    student.faceDescriptor
+                );
 
 
-            const x =
-                box.xCenter *
-                canvas.width;
+            labeledDescriptors.push(
 
+                new faceapi.LabeledFaceDescriptors(
 
-            const y =
-                box.yCenter *
-                canvas.height;
+                    student.lrn,
 
+                    [descriptor]
 
-            const width =
-                box.width *
-                canvas.width;
+                )
 
-
-            const height =
-                box.height *
-                canvas.height;
-
-
-            const left =
-                x - width / 2;
-
-
-            const top =
-                y - height / 2;
-
-
-            drawFaceBox(
-                left,
-                top,
-                width,
-                height
             );
 
         }
     );
 
-}
-
-
-/* ==========================================
-   DRAW FACE BOX
-========================================== */
-
-function drawFaceBox(
-    x,
-    y,
-    width,
-    height
-) {
-
-    ctx.strokeStyle =
-        "#22c55e";
-
-    ctx.lineWidth =
-        5;
-
-
-    ctx.strokeRect(
-        x,
-        y,
-        width,
-        height
-    );
-
-
-    /* CORNERS */
-
-    const size = 25;
-
-
-    ctx.lineWidth =
-        7;
-
-
-    /* TOP LEFT */
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        x,
-        y + size
-    );
-
-    ctx.lineTo(
-        x,
-        y
-    );
-
-    ctx.lineTo(
-        x + size,
-        y
-    );
-
-    ctx.stroke();
-
-
-    /* TOP RIGHT */
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        x + width - size,
-        y
-    );
-
-    ctx.lineTo(
-        x + width,
-        y
-    );
-
-    ctx.lineTo(
-        x + width,
-        y + size
-    );
-
-    ctx.stroke();
-
-
-    /* BOTTOM LEFT */
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        x,
-        y + height - size
-    );
-
-    ctx.lineTo(
-        x,
-        y + height
-    );
-
-    ctx.lineTo(
-        x + size,
-        y + height
-    );
-
-    ctx.stroke();
-
-
-    /* BOTTOM RIGHT */
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        x + width - size,
-        y + height
-    );
-
-    ctx.lineTo(
-        x + width,
-        y + height
-    );
-
-    ctx.lineTo(
-        x + width,
-        y + height - size
-    );
-
-    ctx.stroke();
-
-}
-
-
-/* ==========================================
-   DETECTION LOOP
-========================================== */
-
-async function detectionLoop() {
-
-    if(!scanning) {
-        return;
-    }
-
 
     if(
-        video.readyState >= 2 &&
-        detector
+        labeledDescriptors.length > 0
     ) {
 
-        await detector.send({
-            image: video
-        });
+        /*
+         * 0.55 is the recognition
+         * distance threshold.
+         *
+         * Lower = stricter.
+         */
+
+        faceMatcher =
+            new faceapi.FaceMatcher(
+                labeledDescriptors,
+                0.55
+            );
 
     }
 
 
-    animationFrame =
-        requestAnimationFrame(
-            detectionLoop
-        );
+    message.textContent =
+        students.length +
+        " student(s) registered.";
 
 }
 
 
-/* ==========================================
-   START CAMERA
-========================================== */
+/************************************************
+ * START CAMERA
+ ************************************************/
 
 async function startScanner() {
 
@@ -718,9 +838,16 @@ async function startScanner() {
         stopScanner();
 
 
-        if(!detector) {
+        if(!modelsLoaded) {
 
-            createDetector();
+            await loadModels();
+
+        }
+
+
+        if(!modelsLoaded) {
+
+            return;
 
         }
 
@@ -737,15 +864,24 @@ async function startScanner() {
                     video: {
 
                         facingMode: {
-                            ideal: facingMode
+
+                            ideal:
+                                facingMode
+
                         },
 
                         width: {
-                            ideal: 1280
+
+                            ideal:
+                                1280
+
                         },
 
                         height: {
-                            ideal: 720
+
+                            ideal:
+                                720
+
                         }
 
                     },
@@ -766,15 +902,14 @@ async function startScanner() {
 
 
         status.textContent =
-            "SCANNING...";
-
+            "SCANNING";
 
         status.className =
-            "status detecting";
+            "status scanning";
 
 
         message.textContent =
-            "Looking for faces...";
+            "Looking for students...";
 
 
         startButton.disabled =
@@ -792,13 +927,11 @@ async function startScanner() {
 
     catch(error) {
 
-        console.error(
-            error
-        );
+        console.error(error);
 
 
         status.textContent =
-            "ERROR";
+            "CAMERA ERROR";
 
 
         message.textContent =
@@ -811,14 +944,424 @@ async function startScanner() {
 }
 
 
-/* ==========================================
-   STOP
-========================================== */
+/************************************************
+ * DETECTION LOOP
+ ************************************************/
+
+async function detectionLoop() {
+
+    if(!scanning) {
+
+        detectionLoopRunning =
+            false;
+
+        return;
+
+    }
+
+
+    if(detectionLoopRunning) {
+
+        return;
+
+    }
+
+
+    detectionLoopRunning = true;
+
+
+    try {
+
+        if(
+            video.readyState >= 2 &&
+            video.videoWidth > 0
+        ) {
+
+            const detections =
+                await faceapi
+                    .detectAllFaces(
+
+                        video,
+
+                        new faceapi
+                            .TinyFaceDetectorOptions({
+
+                                inputSize: 320,
+
+                                scoreThreshold: 0.5
+
+                            })
+
+                    )
+                    .withFaceLandmarks()
+                    .withFaceDescriptors();
+
+
+            drawResults(
+                detections
+            );
+
+
+            recognizeStudents(
+                detections
+            );
+
+        }
+
+    }
+
+    catch(error) {
+
+        console.error(
+            "Detection error:",
+            error
+        );
+
+    }
+
+
+    detectionLoopRunning =
+        false;
+
+
+    if(scanning) {
+
+        animationFrame =
+            requestAnimationFrame(
+                detectionLoop
+            );
+
+    }
+
+}
+
+
+/************************************************
+ * DRAW RESULTS
+ ************************************************/
+
+function drawResults(
+    detections
+) {
+
+    canvas.width =
+        video.videoWidth;
+
+
+    canvas.height =
+        video.videoHeight;
+
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    faceCount.textContent =
+        detections.length;
+
+
+    if(
+        detections.length === 0
+    ) {
+
+        status.textContent =
+            "SCANNING";
+
+        status.className =
+            "status scanning";
+
+        return;
+
+    }
+
+
+    status.textContent =
+        detections.length +
+        " FACE" +
+        (
+            detections.length > 1
+            ? "S"
+            : ""
+        ) +
+        " DETECTED";
+
+
+    status.className =
+        "status detected";
+
+
+    detections.forEach(
+        function(detection) {
+
+            const box =
+                detection.detection.box;
+
+
+            const x =
+                box.x;
+
+            const y =
+                box.y;
+
+            const width =
+                box.width;
+
+            const height =
+                box.height;
+
+
+            ctx.strokeStyle =
+                "#22c55e";
+
+
+            ctx.lineWidth =
+                4;
+
+
+            ctx.strokeRect(
+                x,
+                y,
+                width,
+                height
+            );
+
+        }
+    );
+
+}
+
+
+/************************************************
+ * RECOGNIZE STUDENTS
+ ************************************************/
+
+function recognizeStudents(
+    detections
+) {
+
+    results.innerHTML = "";
+
+
+    if(
+        detections.length === 0
+    ) {
+
+        message.textContent =
+            "Looking for students...";
+
+        return;
+
+    }
+
+
+    detections.forEach(
+        function(detection) {
+
+
+            let bestMatch = null;
+
+
+            if(faceMatcher) {
+
+                bestMatch =
+                    faceMatcher.findBestMatch(
+                        detection.descriptor
+                    );
+
+            }
+
+
+            if(
+                !bestMatch ||
+                bestMatch.label ===
+                "unknown"
+            ) {
+
+                showUnknown();
+
+                return;
+
+            }
+
+
+            const student =
+                students.find(
+                    function(s) {
+
+                        return String(s.lrn) ===
+                            String(bestMatch.label);
+
+                    }
+                );
+
+
+            if(!student) {
+
+                showUnknown();
+
+                return;
+
+            }
+
+
+            const distance =
+                bestMatch.distance;
+
+
+            /*
+             * Convert distance to an
+             * approximate similarity.
+             */
+
+            let similarity =
+                Math.max(
+                    0,
+                    Math.min(
+                        100,
+                        Math.round(
+                            (1 - distance) *
+                            100
+                        )
+                    )
+                );
+
+
+            showStudent(
+                student,
+                similarity
+            );
+
+        }
+    );
+
+}
+
+
+/************************************************
+ * SHOW STUDENT
+ ************************************************/
+
+function showStudent(
+    student,
+    similarity
+) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.className =
+        "student";
+
+
+    div.innerHTML = `
+
+        <div class="student-icon">
+            👤
+        </div>
+
+        <div class="student-info">
+
+            <div class="student-name">
+                ${escapeHTML(student.name)}
+            </div>
+
+            <div class="student-details">
+
+                LRN: ${escapeHTML(student.lrn)}
+                <br>
+
+                Grade ${escapeHTML(student.grade)}
+                -
+                ${escapeHTML(student.section)}
+
+            </div>
+
+        </div>
+
+        <div class="match">
+
+            ✓ ${similarity}%
+
+        </div>
+
+    `;
+
+
+    results.appendChild(
+        div
+    );
+
+
+    message.textContent =
+        "Student recognized.";
+
+}
+
+
+/************************************************
+ * SHOW UNKNOWN
+ ************************************************/
+
+function showUnknown() {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.className =
+        "student";
+
+
+    div.innerHTML = `
+
+        <div class="student-icon">
+            ❓
+        </div>
+
+        <div class="student-info">
+
+            <div class="student-name">
+                UNKNOWN
+            </div>
+
+            <div class="student-details unknown">
+
+                Student not registered.
+
+            </div>
+
+        </div>
+
+    `;
+
+
+    results.appendChild(
+        div
+    );
+
+}
+
+
+/************************************************
+ * STOP SCANNER
+ ************************************************/
 
 function stopScanner() {
 
-
     scanning = false;
+
+
+    detectionLoopRunning =
+        false;
 
 
     if(animationFrame) {
@@ -837,7 +1380,8 @@ function stopScanner() {
         stream
             .getTracks()
             .forEach(
-                track => track.stop()
+                track =>
+                    track.stop()
             );
 
     }
@@ -845,7 +1389,9 @@ function stopScanner() {
 
     stream = null;
 
-    video.srcObject = null;
+
+    video.srcObject =
+        null;
 
 
     ctx.clearRect(
@@ -861,7 +1407,7 @@ function stopScanner() {
 
 
     status.className =
-        "status";
+        "status ready";
 
 
     faceCount.textContent =
@@ -869,7 +1415,11 @@ function stopScanner() {
 
 
     message.textContent =
-        "Start the scanner.";
+        "Start scanner to begin.";
+
+
+    results.innerHTML =
+        "";
 
 
     startButton.disabled =
@@ -882,12 +1432,11 @@ function stopScanner() {
 }
 
 
-/* ==========================================
-   SWITCH CAMERA
-========================================== */
+/************************************************
+ * SWITCH CAMERA
+ ************************************************/
 
 async function switchCamera() {
-
 
     if(
         facingMode ===
@@ -916,9 +1465,47 @@ async function switchCamera() {
 }
 
 
-/* ==========================================
-   EVENTS
-========================================== */
+/************************************************
+ * HTML SAFETY
+ ************************************************/
+
+function escapeHTML(
+    value
+) {
+
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+/************************************************
+ * EVENTS
+ ************************************************/
 
 startButton.addEventListener(
     "click",
@@ -938,8 +1525,13 @@ switchButton.addEventListener(
 );
 
 
-</script>
+/************************************************
+ * INITIALIZE
+ ************************************************/
 
+loadModels();
+
+</script>
 
 </body>
 
