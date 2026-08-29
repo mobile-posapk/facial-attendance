@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Camera Test</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #111;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin: 20px;
+        }
+
+        video {
+            width: 95%;
+            max-width: 800px;
+            border-radius: 15px;
+            background: black;
+        }
+
+        button {
+            margin: 15px 5px;
+            padding: 14px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        #start {
+            background: #16a34a;
+            color: white;
+        }
+
+        #stop {
+            background: #dc2626;
+            color: white;
+        }
+
+        #status {
+            margin: 15px;
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <h1>
+        FACIAL ATTENDANCE CAMERA TEST
+    </h1>
+
+    <video
+        id="video"
+        autoplay
+        playsinline
+        muted
+    ></video>
+
+    <div id="status">
+        CAMERA NOT STARTED
+    </div>
+
+    <button id="start">
+        START CAMERA
+    </button>
+
+    <button id="stop">
+        STOP CAMERA
+    </button>
+
+
+<script>
+
+let stream = null;
+
+
+const video =
+    document.getElementById("video");
+
+
+const status =
+    document.getElementById("status");
+
+
+async function startCamera() {
+
+    try {
+
+        status.textContent =
+            "REQUESTING CAMERA...";
+
+
+        stream =
+            await navigator
+                .mediaDevices
+                .getUserMedia({
+
+                    video: {
+
+                        facingMode: {
+                            ideal: "environment"
+                        },
+
+                        width: {
+                            ideal: 1280
+                        },
+
+                        height: {
+                            ideal: 720
+                        }
+
+                    },
+
+                    audio: false
+
+                });
+
+
+        video.srcObject =
+            stream;
+
+
+        await video.play();
+
+
+        status.textContent =
+            "✓ CAMERA IS WORKING";
+
+
+        console.log(
+            "Camera stream:",
+            stream
+        );
+
+    }
+
+    catch(error) {
+
+        console.error(error);
+
+
+        status.textContent =
+            "CAMERA ERROR: " +
+            error.name +
+            " - " +
+            error.message;
+
+    }
+
+}
+
+
+function stopCamera() {
+
+    if(stream) {
+
+        stream
+            .getTracks()
+            .forEach(
+                track => track.stop()
+            );
+
+    }
+
+
+    stream = null;
+
+    video.srcObject = null;
+
+
+    status.textContent =
+        "CAMERA STOPPED";
+
+}
+
+
+document
+    .getElementById("start")
+    .addEventListener(
+        "click",
+        startCamera
+    );
+
+
+document
+    .getElementById("stop")
+    .addEventListener(
+        "click",
+        stopCamera
+    );
+
+</script>
+
+</body>
+
+</html>
