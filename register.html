@@ -1,6 +1,4 @@
-```html
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -12,18 +10,9 @@
     content="width=device-width, initial-scale=1.0"
 >
 
-<title>
-    Student Face Registration
-</title>
+<title>Register Student</title>
 
-
-<!-- FACE API -->
-
-<script
-    defer
-    src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"
-></script>
-
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
 <style>
 
@@ -31,422 +20,167 @@
     box-sizing: border-box;
 }
 
-
 body {
-
     margin: 0;
-
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-    background:
-        #f4f7fb;
-
-    color:
-        #1f2937;
-
+    background: #111827;
+    color: white;
+    font-family: Arial, sans-serif;
 }
-
 
 header {
-
-    background:
-        #123c69;
-
-    color:
-        white;
-
-    text-align:
-        center;
-
-    padding:
-        25px 15px;
-
+    padding: 18px;
+    background: #1f2937;
+    text-align: center;
 }
-
 
 header h1 {
-
-    margin:
-        0;
-
-    font-size:
-        28px;
-
+    margin: 0;
+    font-size: 21px;
 }
-
 
 header p {
-
-    margin:
-        8px 0 0;
-
-    font-size:
-        14px;
-
-    opacity:
-        0.9;
-
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: #9ca3af;
 }
-
 
 .container {
-
-    width:
-        100%;
-
-    max-width:
-        850px;
-
-    margin:
-        25px auto;
-
-    padding:
-        0 15px;
-
+    max-width: 900px;
+    margin: auto;
+    padding: 15px;
 }
-
 
 .card {
-
-    background:
-        white;
-
-    border-radius:
-        12px;
-
-    padding:
-        20px;
-
-    margin-bottom:
-        20px;
-
-    box-shadow:
-        0 3px 12px rgba(
-            0,
-            0,
-            0,
-            0.08
-        );
-
+    background: #1f2937;
+    border-radius: 15px;
+    padding: 18px;
+    margin-bottom: 15px;
 }
-
 
 .card h2 {
-
-    margin-top:
-        0;
-
-    color:
-        #123c69;
-
-    font-size:
-        20px;
-
+    margin-top: 0;
+    font-size: 17px;
 }
-
 
 .form-group {
-
-    margin-bottom:
-        15px;
-
+    margin-bottom: 12px;
 }
 
-
-.form-group label {
-
-    display:
-        block;
-
-    font-weight:
-        bold;
-
-    margin-bottom:
-        6px;
-
+label {
+    display: block;
+    font-size: 12px;
+    color: #d1d5db;
+    margin-bottom: 5px;
 }
 
-
-.form-group input {
-
-    width:
-        100%;
-
-    padding:
-        12px;
-
-    border:
-        1px solid #cbd5e1;
-
-    border-radius:
-        8px;
-
-    font-size:
-        16px;
-
+input {
+    width: 100%;
+    padding: 13px;
+    border-radius: 8px;
+    border: 1px solid #4b5563;
+    background: #111827;
+    color: white;
+    font-size: 15px;
 }
-
 
 .camera {
-
-    position:
-        relative;
-
-    width:
-        100%;
-
-    background:
-        #000;
-
-    border-radius:
-        12px;
-
-    overflow:
-        hidden;
-
+    position: relative;
+    background: black;
+    border-radius: 14px;
+    overflow: hidden;
 }
 
-
-#video {
-
-    width:
-        100%;
-
-    display:
-        block;
-
-    background:
-        #000;
-
+video {
+    width: 100%;
+    display: block;
 }
 
-
-#canvas {
-
-    position:
-        absolute;
-
-    left:
-        0;
-
-    top:
-        0;
-
-    width:
-        100%;
-
-    height:
-        100%;
-
-    pointer-events:
-        none;
-
+canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
 }
-
 
 .camera-status {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
 
-    position:
-        absolute;
+    padding: 8px 13px;
 
-    left:
-        10px;
+    background: rgba(0,0,0,.75);
 
-    top:
-        10px;
+    border-radius: 20px;
 
-    background:
-        rgba(
-            0,
-            0,
-            0,
-            0.7
-        );
-
-    color:
-        white;
-
-    padding:
-        7px 10px;
-
-    border-radius:
-        6px;
-
-    font-size:
-        13px;
-
+    font-size: 11px;
+    font-weight: bold;
 }
-
 
 .controls {
-
-    display:
-        flex;
-
-    flex-wrap:
-        wrap;
-
-    gap:
-        10px;
-
-    margin-top:
-        15px;
-
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
 }
-
 
 button {
+    flex: 1;
+    padding: 14px;
 
-    border:
-        none;
+    border: none;
+    border-radius: 8px;
 
-    border-radius:
-        8px;
-
-    padding:
-        13px 18px;
-
-    font-size:
-        15px;
-
-    font-weight:
-        bold;
-
-    cursor:
-        pointer;
-
-    background:
-        #123c69;
-
-    color:
-        white;
-
+    font-weight: bold;
+    cursor: pointer;
 }
 
-
-button:hover:not(:disabled) {
-
-    opacity:
-        0.9;
-
+#startCamera {
+    background: #16a34a;
+    color: white;
 }
 
-
-button:disabled {
-
-    opacity:
-        0.45;
-
-    cursor:
-        not-allowed;
-
+#captureFace {
+    background: #2563eb;
+    color: white;
 }
-
 
 #saveStudent {
-
-    width:
-        100%;
-
-    background:
-        #16803c;
-
-    font-size:
-        17px;
-
+    background: #9333ea;
+    color: white;
 }
 
+button:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
 
 .result {
+    margin-top: 12px;
+    padding: 13px;
 
-    margin-top:
-        15px;
+    background: #111827;
 
-    padding:
-        12px;
+    border-radius: 8px;
 
-    border-radius:
-        8px;
-
-    background:
-        #f1f5f9;
-
-    text-align:
-        center;
-
-    font-size:
-        14px;
-
+    font-size: 13px;
 }
-
 
 .success {
-
-    color:
-        #16803c;
-
-    font-weight:
-        bold;
-
+    color: #4ade80;
 }
-
-
-.error {
-
-    color:
-        #b91c1c;
-
-    font-weight:
-        bold;
-
-}
-
 
 .warning {
-
-    color:
-        #b45309;
-
-    font-weight:
-        bold;
-
+    color: #facc15;
 }
 
-
-#sampleProgress {
-
-    font-size:
-        16px;
-
+.error {
+    color: #f87171;
 }
-
 
 @media(max-width:600px) {
 
-    header h1 {
-
-        font-size:
-            22px;
-
-    }
-
-
     .controls {
-
-        flex-direction:
-            column;
-
-    }
-
-
-    .controls button {
-
-        width:
-            100%;
-
+        flex-direction: column;
     }
 
 }
@@ -461,13 +195,13 @@ button:disabled {
 
 <header>
 
-    <h1>
-        STUDENT FACE REGISTRATION
-    </h1>
+<h1>
+STUDENT FACE REGISTRATION
+</h1>
 
-    <p>
-        REGISTER STUDENT FACIAL ID
-    </p>
+<p>
+REGISTER STUDENT FACIAL ID
+</p>
 
 </header>
 
@@ -475,213 +209,184 @@ button:disabled {
 <div class="container">
 
 
-<!-- ==========================================
-     STUDENT INFORMATION
-========================================== -->
+<!-- STUDENT INFORMATION -->
 
 <div class="card">
 
-    <h2>
-        Student Information
-    </h2>
+<h2>
+Student Information
+</h2>
 
 
-    <div class="form-group">
+<div class="form-group">
 
-        <label>
-            LRN
-        </label>
+<label>
+LRN
+</label>
 
-        <input
-            id="lrn"
-            type="text"
-            inputmode="numeric"
-            autocomplete="off"
-            placeholder="Enter LRN"
-        >
-
-    </div>
+<input
+    id="lrn"
+    type="text"
+    placeholder="Enter LRN"
+>
 
 
-    <div class="form-group">
-
-        <label>
-            STUDENT NAME
-        </label>
-
-        <input
-            id="name"
-            type="text"
-            autocomplete="off"
-            placeholder="Enter complete name"
-        >
-
-    </div>
+</div>
 
 
-    <div class="form-group">
+<div class="form-group">
 
-        <label>
-            GRADE
-        </label>
+<label>
+STUDENT NAME
+</label>
 
-        <input
-            id="grade"
-            type="text"
-            autocomplete="off"
-            placeholder="Example: 9"
-        >
-
-    </div>
+<input
+    id="name"
+    type="text"
+    placeholder="Enter complete name"
+>
 
 
-    <div class="form-group">
+</div>
 
-        <label>
-            SECTION
-        </label>
 
-        <input
-            id="section"
-            type="text"
-            autocomplete="off"
-            placeholder="Example: Rizal"
-        >
+<div class="form-group">
 
-    </div>
+<label>
+GRADE
+</label>
+
+<input
+    id="grade"
+    type="text"
+    placeholder="Example: 9"
+>
+
+
+</div>
+
+
+<div class="form-group">
+
+<label>
+SECTION
+</label>
+
+<input
+    id="section"
+    type="text"
+    placeholder="Example: Rizal"
+>
+
+
+</div>
 
 </div>
 
 
 
-<!-- ==========================================
-     CAMERA
-========================================== -->
+<!-- CAMERA -->
 
 <div class="card">
 
-    <h2>
-        Face Capture
-    </h2>
+<h2>
+Face Capture
+</h2>
 
 
-    <div class="camera">
+<div class="camera">
 
-        <video
-            id="video"
-            autoplay
-            muted
-            playsinline
-        ></video>
-
-
-        <canvas
-            id="canvas"
-        ></canvas>
+<video
+    id="video"
+    autoplay
+    muted
+    playsinline
+></video>
 
 
-        <div
-            id="cameraStatus"
-            class="camera-status"
-        >
-            CAMERA OFF
-        </div>
-
-    </div>
+<canvas
+    id="canvas"
+></canvas>
 
 
-    <div class="controls">
+<div
+    id="cameraStatus"
+    class="camera-status"
+>
 
+CAMERA OFF
 
-        <button
-            id="startCamera"
-        >
-            ▶ START CAMERA
-        </button>
-
-
-        <button
-            id="captureFace"
-            disabled
-        >
-            📸 CAPTURE SAMPLE
-        </button>
-
-
-        <button
-            id="switchCamera"
-        >
-            🔄 SWITCH CAMERA
-        </button>
-
-
-    </div>
-
-
-    <div
-        id="result"
-        class="result"
-    >
-        Waiting for camera...
-    </div>
-
-
-    <div
-        id="sampleProgress"
-        class="result"
-    >
-
-        Face Samples:
-        <strong>0 / 5</strong>
-
-    </div>
+</div>
 
 </div>
 
 
-
-<!-- ==========================================
-     SAVE
-========================================== -->
-
-<div class="card">
+<div class="controls">
 
     <button
-        id="saveStudent"
+        id="startCamera"
+    >
+        ▶ START CAMERA
+    </button>
+
+    <button
+        id="captureFace"
         disabled
     >
-        💾 SAVE STUDENT
+        📸 CAPTURE SAMPLE
+    </button>
+
+    <button
+        id="switchCamera"
+    >
+        🔄 SWITCH CAMERA
     </button>
 
 </div>
 
+<div
+    id="result"
+    class="result"
+>
+
+Waiting for camera...
+
+</div>
+
+</div>
+
+    <div
+    id="sampleProgress"
+    class="result"
+>
+
+    Face Samples:
+    <strong>0 / 5</strong>
 
 </div>
 
 
 
+<!-- SAVE -->
+
+<div class="card">
+
+<button
+    id="saveStudent"
+    disabled
+>
+
+💾 SAVE STUDENT
+
+</button>
+
+</div>
+
+
+</div>
+
+
 <script>
-
-
-/* ==========================================
-   GOOGLE APPS SCRIPT API
-========================================== */
-
-
-/*
- * IMPORTANT:
- *
- * Replace the URL below with your
- * deployed Google Apps Script Web App URL.
- *
- * Example:
- *
- * https://script.google.com/macros/s/XXXXXXXX/exec
- */
-
-const API_URL =
-    "https://script.google.com/macros/s/AKfycbwZfRqoHRzdQrRbISRQFtBLtIiYg-E82_bzgL1oAY2oMjAKjHTMYcnU0Z5t_YVje9-2Cw/exec";
-
 
 
 /* ==========================================
@@ -690,19 +395,12 @@ const API_URL =
 
 let stream = null;
 
-
 let faceDescriptors = [];
-
 
 let modelsLoaded = false;
 
-
-/*
- * Front camera is the default.
- */
-
+// Front camera is the default for registration
 let facingMode = "user";
-
 
 
 /* ==========================================
@@ -714,42 +412,35 @@ const video =
         "video"
     );
 
-
 const canvas =
     document.getElementById(
         "canvas"
     );
-
 
 const cameraStatus =
     document.getElementById(
         "cameraStatus"
     );
 
-
 const result =
     document.getElementById(
         "result"
     );
-
 
 const startCamera =
     document.getElementById(
         "startCamera"
     );
 
-
 const captureFace =
     document.getElementById(
         "captureFace"
     );
 
-
 const saveStudent =
     document.getElementById(
         "saveStudent"
     );
-
 
 
 /* ==========================================
@@ -768,32 +459,22 @@ async function loadModels() {
             "https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights";
 
 
-        await faceapi
-            .nets
-            .tinyFaceDetector
-            .loadFromUri(
-                MODEL_URL
-            );
+        await faceapi.nets.tinyFaceDetector.loadFromUri(
+            MODEL_URL
+        );
 
 
-        await faceapi
-            .nets
-            .faceLandmark68Net
-            .loadFromUri(
-                MODEL_URL
-            );
+        await faceapi.nets.faceLandmark68Net.loadFromUri(
+            MODEL_URL
+        );
 
 
-        await faceapi
-            .nets
-            .faceRecognitionNet
-            .loadFromUri(
-                MODEL_URL
-            );
+        await faceapi.nets.faceRecognitionNet.loadFromUri(
+            MODEL_URL
+        );
 
 
-        modelsLoaded =
-            true;
+        modelsLoaded = true;
 
 
         result.innerHTML =
@@ -801,8 +482,8 @@ async function loadModels() {
             '✓ Facial recognition model ready.' +
             '</span>';
 
-    }
 
+    }
 
     catch(error) {
 
@@ -817,7 +498,6 @@ async function loadModels() {
     }
 
 }
-
 
 
 /* ==========================================
@@ -838,17 +518,13 @@ async function startCameraFunction() {
         }
 
 
-        /*
-         * Stop current camera
-         */
-
+        // Stop the current camera first
         if (stream) {
 
             stream
                 .getTracks()
                 .forEach(
-                    track =>
-                        track.stop()
+                    track => track.stop()
                 );
 
         }
@@ -866,30 +542,20 @@ async function startCameraFunction() {
                     video: {
 
                         facingMode: {
-
-                            ideal:
-                                facingMode
-
+                            ideal: facingMode
                         },
 
                         width: {
-
-                            ideal:
-                                1280
-
+                            ideal: 1280
                         },
 
                         height: {
-
-                            ideal:
-                                720
-
+                            ideal: 720
                         }
 
                     },
 
-                    audio:
-                        false
+                    audio: false
 
                 });
 
@@ -901,20 +567,12 @@ async function startCameraFunction() {
         await video.play();
 
 
-        /*
-         * Camera status
-         */
-
-        if (
-            facingMode === "user"
-        ) {
+        if (facingMode === "user") {
 
             cameraStatus.textContent =
                 "FRONT CAMERA";
 
-        }
-
-        else {
+        } else {
 
             cameraStatus.textContent =
                 "REAR CAMERA";
@@ -929,10 +587,10 @@ async function startCameraFunction() {
         result.textContent =
             "Position the student's face inside the camera.";
 
+
     }
 
-
-    catch(error) {
+    catch (error) {
 
         console.error(error);
 
@@ -952,49 +610,35 @@ async function startCameraFunction() {
 
 }
 
+    async function switchCameraFunction() {
 
+    // Change camera
 
-/* ==========================================
-   SWITCH CAMERA
-========================================== */
+    if (facingMode === "user") {
 
-async function switchCameraFunction() {
+        facingMode = "environment";
 
-    if (
-        facingMode === "user"
-    ) {
+    } else {
 
-        facingMode =
-            "environment";
+        facingMode = "user";
 
     }
 
-    else {
 
-        facingMode =
-            "user";
-
-    }
-
+    // Restart camera using the new camera
 
     if (stream) {
 
         await startCameraFunction();
 
-    }
+    } else {
 
-    else {
-
-        if (
-            facingMode === "user"
-        ) {
+        if (facingMode === "user") {
 
             cameraStatus.textContent =
                 "FRONT CAMERA";
 
-        }
-
-        else {
+        } else {
 
             cameraStatus.textContent =
                 "REAR CAMERA";
@@ -1006,9 +650,8 @@ async function switchCameraFunction() {
 }
 
 
-
 /* ==========================================
-   CAPTURE FACE SAMPLE
+   CAPTURE FACE
 ========================================== */
 
 async function captureFaceFunction() {
@@ -1033,9 +676,7 @@ async function captureFaceFunction() {
     }
 
 
-    if (
-        faceDescriptors.length >= 5
-    ) {
+    if (faceDescriptors.length >= 5) {
 
         result.textContent =
             "All 5 face samples have already been captured.";
@@ -1054,28 +695,15 @@ async function captureFaceFunction() {
         const detection =
             await faceapi
                 .detectSingleFace(
-
                     video,
-
-                    new faceapi
-                        .TinyFaceDetectorOptions({
-
-                            inputSize:
-                                320,
-
-                            scoreThreshold:
-                                0.5
-
-                        })
-
+                    new faceapi.TinyFaceDetectorOptions({
+                        inputSize: 320,
+                        scoreThreshold: 0.5
+                    })
                 )
                 .withFaceLandmarks()
                 .withFaceDescriptor();
 
-
-        /*
-         * No face
-         */
 
         if (!detection) {
 
@@ -1090,13 +718,11 @@ async function captureFaceFunction() {
 
 
         /*
-         * Face size check
+         * CHECK FACE SIZE
          */
 
         const box =
-            detection
-                .detection
-                .box;
+            detection.detection.box;
 
 
         if (
@@ -1115,15 +741,13 @@ async function captureFaceFunction() {
 
 
         /*
-         * SAVE DESCRIPTOR
+         * SAVE FACE DESCRIPTOR
          */
 
         faceDescriptors.push(
-
             Array.from(
                 detection.descriptor
             )
-
         );
 
 
@@ -1135,7 +759,7 @@ async function captureFaceFunction() {
 
 
         /*
-         * DRAW FACE DETECTION
+         * DRAW FACE BOX
          */
 
         const displaySize = {
@@ -1152,49 +776,37 @@ async function captureFaceFunction() {
         canvas.width =
             displaySize.width;
 
-
         canvas.height =
             displaySize.height;
 
 
         const resized =
             faceapi.resizeResults(
-
                 detection,
-
                 displaySize
-
             );
 
 
         const ctx =
-            canvas.getContext(
-                "2d"
-            );
+            canvas.getContext("2d");
 
 
         ctx.clearRect(
-
             0,
             0,
-
             canvas.width,
             canvas.height
-
         );
 
 
         faceapi.draw.drawDetections(
-
             canvas,
-
             resized
-
         );
 
 
         /*
-         * NEXT INSTRUCTION
+         * SHOW INSTRUCTION
          */
 
         if (
@@ -1203,33 +815,22 @@ async function captureFaceFunction() {
 
             result.innerHTML =
                 '<span class="success">' +
-
                 '✓ Sample ' +
-
                 faceDescriptors.length +
-
                 ' captured.' +
-
                 '</span>' +
-
                 '<br><br>' +
-
                 getNextInstruction();
 
         }
-
 
         else {
 
             result.innerHTML =
                 '<span class="success">' +
-
                 '✓ ALL 5 FACE SAMPLES CAPTURED.' +
-
                 '</span>' +
-
                 '<br><br>' +
-
                 'The student facial profile is ready.';
 
 
@@ -1243,7 +844,6 @@ async function captureFaceFunction() {
         }
 
     }
-
 
     catch(error) {
 
@@ -1259,13 +859,7 @@ async function captureFaceFunction() {
 
 }
 
-
-
-/* ==========================================
-   SAMPLE PROGRESS
-========================================== */
-
-function updateSampleProgress() {
+    function updateSampleProgress() {
 
     const progress =
         document.getElementById(
@@ -1275,65 +869,43 @@ function updateSampleProgress() {
 
     progress.innerHTML =
         "Face Samples: " +
-
         "<strong>" +
-
         faceDescriptors.length +
-
         " / 5" +
-
         "</strong>";
 
 }
 
-
-
-/* ==========================================
-   NEXT SAMPLE INSTRUCTION
-========================================== */
-
-function getNextInstruction() {
+    function getNextInstruction() {
 
     const count =
         faceDescriptors.length;
 
 
-    if (
-        count === 1
-    ) {
+    if (count === 1) {
 
-        return
-            "Sample 2: Turn your face slightly LEFT.";
+        return "Sample 2: Turn your face slightly LEFT.";
 
     }
 
 
-    if (
-        count === 2
-    ) {
+    if (count === 2) {
 
-        return
-            "Sample 3: Turn your face slightly RIGHT.";
+        return "Sample 3: Turn your face slightly RIGHT.";
 
     }
 
 
-    if (
-        count === 3
-    ) {
+    if (count === 3) {
 
-        return
-            "Sample 4: Look slightly UP.";
+        return "Sample 4: Look slightly UP.";
 
     }
 
 
-    if (
-        count === 4
-    ) {
+    if (count === 4) {
 
-        return
-            "Sample 5: Look slightly DOWN.";
+        return "Sample 5: Look slightly DOWN.";
 
     }
 
@@ -1342,276 +914,111 @@ function getNextInstruction() {
 
 }
 
-
-
-/* ==========================================
-   SEND STUDENT TO GOOGLE SHEETS
-========================================== */
-
-async function sendStudentToGoogleSheets(
-    student
-) {
-
-    try {
-
-        /*
-         * Check API URL
-         */
-
-        if (
-            !API_URL ||
-            API_URL.includes(
-                "PASTE_YOUR"
-            )
-        ) {
-
-            return {
-
-                success:
-                    false,
-
-                message:
-                    "Google Apps Script API URL has not been configured."
-
-            };
-
-        }
-
-
-        /*
-         * Send request
-         */
-
-        const response =
-            await fetch(
-
-                API_URL,
-
-                {
-
-                    method:
-                        "POST",
-
-                    headers: {
-
-                        "Content-Type":
-                            "text/plain;charset=utf-8"
-
-                    },
-
-                    body:
-                        JSON.stringify({
-
-                            action:
-                                "registerStudent",
-
-                            lrn:
-                                student.lrn,
-
-                            name:
-                                student.name,
-
-                            grade:
-                                student.grade,
-
-                            section:
-                                student.section,
-
-                            faceDescriptors:
-                                student.faceDescriptors
-
-                        })
-
-                }
-
-            );
-
-
-        /*
-         * Check HTTP response
-         */
-
-        if (
-            !response.ok
-        ) {
-
-            throw new Error(
-                "Server returned HTTP " +
-                response.status
-            );
-
-        }
-
-
-        const data =
-            await response.json();
-
-
-        console.log(
-            "Google Apps Script response:",
-            data
-        );
-
-
-        return data;
-
-    }
-
-
-    catch(error) {
-
-        console.error(
-            "Google Sheets API error:",
-            error
-        );
-
-
-        return {
-
-            success:
-                false,
-
-            message:
-                "Unable to connect to Google Sheets. " +
-                error.message
-
-        };
-
-    }
-
-}
-
-
-
 /* ==========================================
    SAVE STUDENT
 ========================================== */
 
-async function saveStudentFunction() {
+function saveStudentFunction() {
 
-    /*
-     * GET INFORMATION
-     */
 
     const lrn =
         document
-            .getElementById(
-                "lrn"
-            )
+            .getElementById("lrn")
             .value
             .trim();
 
 
     const name =
         document
-            .getElementById(
-                "name"
-            )
+            .getElementById("name")
             .value
             .trim();
 
 
     const grade =
         document
-            .getElementById(
-                "grade"
-            )
+            .getElementById("grade")
             .value
             .trim();
 
 
     const section =
         document
-            .getElementById(
-                "section"
-            )
+            .getElementById("section")
             .value
             .trim();
 
 
+    if(!lrn) {
 
-    /*
-     * VALIDATION
-     */
-
-    if (!lrn) {
-
-        alert(
-            "Please enter the LRN."
-        );
+        alert("Please enter the LRN.");
 
         return;
 
     }
 
 
-    if (!name) {
+    if(!name) {
 
-        alert(
-            "Please enter the student's name."
-        );
+        alert("Please enter the student's name.");
 
         return;
 
     }
 
 
-    if (!grade) {
+    if(!grade) {
 
-        alert(
-            "Please enter the grade."
-        );
+        alert("Please enter the grade.");
 
         return;
 
     }
 
 
-    if (!section) {
+    if(!section) {
 
-        alert(
-            "Please enter the section."
-        );
+        alert("Please enter the section.");
 
         return;
 
     }
 
 
-    if (
-        faceDescriptors.length < 5
-    ) {
+    if (faceDescriptors.length < 5) {
 
-        alert(
-            "Please capture all 5 face samples first."
-        );
+    alert(
+        "Please capture all 5 face samples first."
+    );
 
-        return;
+    return;
 
-    }
-
+}
 
 
     /*
-     * CREATE STUDENT OBJECT
-     */
+       TEMPORARY STORAGE
+
+       For this module we store the
+       student locally.
+
+       In the next module we will
+       send this to Google Apps Script
+       and Google Sheets.
+    */
+
 
     const student = {
 
-        lrn:
-            lrn,
+        lrn: lrn,
 
-        name:
-            name,
+        name: name,
 
-        grade:
-            grade,
+        grade: grade,
 
-        section:
-            section,
+        section: section,
 
-        faceDescriptors:
-            faceDescriptors,
+        faceDescriptors: faceDescriptors,
 
         createdAt:
             new Date().toISOString()
@@ -1619,156 +1026,40 @@ async function saveStudentFunction() {
     };
 
 
-
-    /*
-     * DISABLE SAVE WHILE SENDING
-     */
-
-    saveStudent.disabled =
-        true;
-
-
-    result.innerHTML =
-        "⏳ Saving student to Google Sheets...";
-
-
-
-    /*
-     * SEND TO GOOGLE APPS SCRIPT
-     */
-
-    const sheetsResult =
-        await sendStudentToGoogleSheets(
-            student
+    const students =
+        JSON.parse(
+            localStorage.getItem(
+                "registeredStudents"
+            ) || "[]"
         );
 
 
-
-    /*
-     * HANDLE ERROR
-     */
-
-    if (
-        !sheetsResult.success
-    ) {
-
-        saveStudent.disabled =
-            false;
+    students.push(student);
 
 
-        if (
-            sheetsResult.duplicate
-        ) {
+    localStorage.setItem(
+        "registeredStudents",
+        JSON.stringify(students)
+    );
 
-            result.innerHTML =
-                '<span class="warning">' +
-                '⚠ ' +
-                sheetsResult.message +
-                '</span>';
-
-        }
-
-        else {
-
-            result.innerHTML =
-                '<span class="error">' +
-                '❌ ' +
-                sheetsResult.message +
-                '</span>';
-
-        }
-
-
-        return;
-
-    }
-
-
-
-    /*
-     * SUCCESS
-     */
 
     result.innerHTML =
         '<span class="success">' +
         '✓ STUDENT REGISTERED SUCCESSFULLY' +
         '</span>' +
-
         '<br><br>' +
-
         name;
 
-
-
-    /*
-     * RESET
-     */
 
     saveStudent.disabled =
         true;
 
 
-    faceDescriptors =
-        [];
+   faceDescriptors = [];
 
-
-    updateSampleProgress();
-
-
-    /*
-     * CLEAR FORM
-     */
-
-    document
-        .getElementById(
-            "lrn"
-        )
-        .value = "";
-
-
-    document
-        .getElementById(
-            "name"
-        )
-        .value = "";
-
-
-    document
-        .getElementById(
-            "grade"
-        )
-        .value = "";
-
-
-    document
-        .getElementById(
-            "section"
-        )
-        .value = "";
-
-
-    /*
-     * CLEAR FACE BOX
-     */
-
-    const ctx =
-        canvas.getContext(
-            "2d"
-        );
-
-
-    ctx.clearRect(
-
-        0,
-        0,
-
-        canvas.width,
-        canvas.height
-
-    );
+updateSampleProgress();
 
 }
-
 
 
 /* ==========================================
@@ -1776,44 +1067,29 @@ async function saveStudentFunction() {
 ========================================== */
 
 startCamera.addEventListener(
-
     "click",
-
     startCameraFunction
-
 );
 
 
 captureFace.addEventListener(
-
     "click",
-
     captureFaceFunction
-
 );
 
 
 saveStudent.addEventListener(
-
     "click",
-
     saveStudentFunction
-
 );
 
 
 document
-    .getElementById(
-        "switchCamera"
-    )
+    .getElementById("switchCamera")
     .addEventListener(
-
         "click",
-
         switchCameraFunction
-
     );
-
 
 
 /* ==========================================
@@ -1822,11 +1098,9 @@ document
 
 loadModels();
 
-
 </script>
 
 
 </body>
 
 </html>
-```
