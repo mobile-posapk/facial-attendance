@@ -1679,22 +1679,29 @@ function showStudent(
 /************************************************
  * RECORD STUDENT ATTENDANCE
  ************************************************/
+/************************************************
+ * AUTOMATIC LINE SCANNING
+ * ATTENDANCE RECORDING
+ ************************************************/
 
-const attendanceLocks =
-    new Set();
+const attendanceLocks = new Set();
 
+const recognitionCooldown = 5000;
+
+
+/************************************************
+ * RECORD STUDENT ATTENDANCE
+ ************************************************/
 
 async function recordStudentAttendance(student) {
 
-    /*
-     * Prevent repeated scans
-     */
-
     const lrn =
-        String(
-            student.lrn
-        );
+        String(student.lrn).trim();
 
+
+    /*
+     * STUDENT IS ALREADY BEING PROCESSED
+     */
 
     if (
         attendanceLocks.has(lrn)
@@ -1705,7 +1712,25 @@ async function recordStudentAttendance(student) {
     }
 
 
+    /*
+     * LOCK STUDENT IMMEDIATELY
+     *
+     * This prevents multiple requests
+     * while the face remains in front
+     * of the camera.
+     */
+
     attendanceLocks.add(lrn);
+
+
+    /*
+     * VISUAL CONFIRMATION
+     */
+
+    showAttendanceConfirmation(
+        student,
+        "RECORDING..."
+    );
 
 
     try {
@@ -1762,6 +1787,10 @@ async function recordStudentAttendance(student) {
         );
 
 
+        /*
+         * SUCCESS
+         */
+
         if (
             data.success
         ) {
@@ -1770,18 +1799,25 @@ async function recordStudentAttendance(student) {
                 data.duplicate
             ) {
 
-                message.textContent =
-                    student.name +
-                    " — already marked PRESENT today.";
+                showAttendanceConfirmation(
+
+                    student,
+
+                    "ALREADY PRESENT"
+
+                );
 
             }
 
             else {
 
-                message.textContent =
-                    "✓ " +
-                    student.name +
-                    " — PRESENT";
+                showAttendanceConfirmation(
+
+                    student,
+
+                    "✓ PRESENT"
+
+                );
 
             }
 
@@ -1789,6 +1825,15 @@ async function recordStudentAttendance(student) {
 
 
         else {
+
+            showAttendanceConfirmation(
+
+                student,
+
+                "ATTENDANCE ERROR"
+
+            );
+
 
             console.error(
                 data.message
@@ -1806,12 +1851,24 @@ async function recordStudentAttendance(student) {
             error
         );
 
+
+        showAttendanceConfirmation(
+
+            student,
+
+            "CONNECTION ERROR"
+
+        );
+
     }
 
 
     /*
-     * Allow this student to be
-     * recognized again after 8 seconds.
+     * KEEP STUDENT LOCKED FOR A FEW SECONDS
+     *
+     * This allows the student to move
+     * through the camera without creating
+     * repeated attendance events.
      */
 
     setTimeout(
@@ -1822,12 +1879,87 @@ async function recordStudentAttendance(student) {
 
         },
 
-        8000
+        recognitionCooldown
 
     );
 
 }
 
+
+
+/************************************************
+ * ATTENDANCE CONFIRMATION
+ ************************************************/
+
+function showAttendanceConfirmation(
+    student,
+    statusText
+) {
+
+    results.innerHTML = "";
+
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.className =
+        "student";
+
+
+    div.innerHTML = `
+
+        <div class="student-icon">
+            ${statusText === "✓ PRESENT"
+                ? "✓"
+                : "👤"}
+        </div>
+
+        <div class="student-info">
+
+            <div class="student-name">
+                ${escapeHTML(student.name)}
+            </div>
+
+            <div class="student-details">
+
+                LRN:
+                ${escapeHTML(student.lrn)}
+
+                <br>
+
+                Grade:
+                ${escapeHTML(student.grade)}
+
+                -
+                ${escapeHTML(student.section)}
+
+            </div>
+
+        </div>
+
+        <div class="match">
+
+            ${escapeHTML(statusText)}
+
+        </div>
+
+    `;
+
+
+    results.appendChild(
+        div
+    );
+
+
+    message.textContent =
+        student.name +
+        " — " +
+        statusText;
+
+}
 /************************************************
  * SHOW UNKNOWN
  ************************************************/
