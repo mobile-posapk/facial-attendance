@@ -323,26 +323,26 @@ CAMERA OFF
 
 <div class="controls">
 
-<button
-    id="startCamera"
->
+    <button
+        id="startCamera"
+    >
+        ▶ START CAMERA
+    </button>
 
-▶ START CAMERA
+    <button
+        id="captureFace"
+        disabled
+    >
+        📸 CAPTURE FACE
+    </button>
 
-</button>
-
-
-<button
-    id="captureFace"
-    disabled
->
-
-📸 CAPTURE FACE
-
-</button>
+    <button
+        id="switchCamera"
+    >
+        🔄 SWITCH CAMERA
+    </button>
 
 </div>
-
 
 <div
     id="result"
@@ -388,6 +388,9 @@ let stream = null;
 let faceDescriptor = null;
 
 let modelsLoaded = false;
+
+// Front camera is the default for registration
+let facingMode = "user";
 
 
 /* ==========================================
@@ -495,7 +498,7 @@ async function startCameraFunction() {
 
     try {
 
-        if(!modelsLoaded) {
+        if (!modelsLoaded) {
 
             result.textContent =
                 "Please wait for the recognition model to load.";
@@ -503,6 +506,22 @@ async function startCameraFunction() {
             return;
 
         }
+
+
+        // Stop the current camera first
+        if (stream) {
+
+            stream
+                .getTracks()
+                .forEach(
+                    track => track.stop()
+                );
+
+        }
+
+
+        result.textContent =
+            "Starting camera...";
 
 
         stream =
@@ -513,7 +532,7 @@ async function startCameraFunction() {
                     video: {
 
                         facingMode: {
-                            ideal: "environment"
+                            ideal: facingMode
                         },
 
                         width: {
@@ -538,8 +557,17 @@ async function startCameraFunction() {
         await video.play();
 
 
-        cameraStatus.textContent =
-            "CAMERA ACTIVE";
+        if (facingMode === "user") {
+
+            cameraStatus.textContent =
+                "FRONT CAMERA";
+
+        } else {
+
+            cameraStatus.textContent =
+                "REAR CAMERA";
+
+        }
 
 
         captureFace.disabled =
@@ -547,14 +575,18 @@ async function startCameraFunction() {
 
 
         result.textContent =
-            "Position one student's face inside the camera.";
+            "Position the student's face inside the camera.";
 
 
     }
 
-    catch(error) {
+    catch (error) {
 
         console.error(error);
+
+
+        cameraStatus.textContent =
+            "CAMERA ERROR";
 
 
         result.innerHTML =
@@ -563,6 +595,45 @@ async function startCameraFunction() {
             ': ' +
             error.message +
             '</span>';
+
+    }
+
+}
+
+    async function switchCameraFunction() {
+
+    // Change camera
+
+    if (facingMode === "user") {
+
+        facingMode = "environment";
+
+    } else {
+
+        facingMode = "user";
+
+    }
+
+
+    // Restart camera using the new camera
+
+    if (stream) {
+
+        await startCameraFunction();
+
+    } else {
+
+        if (facingMode === "user") {
+
+            cameraStatus.textContent =
+                "FRONT CAMERA";
+
+        } else {
+
+            cameraStatus.textContent =
+                "REAR CAMERA";
+
+        }
 
     }
 
@@ -857,6 +928,14 @@ saveStudent.addEventListener(
     "click",
     saveStudentFunction
 );
+
+
+document
+    .getElementById("switchCamera")
+    .addEventListener(
+        "click",
+        switchCameraFunction
+    );
 
 
 /* ==========================================
