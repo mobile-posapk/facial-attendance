@@ -1471,139 +1471,139 @@ function drawResults(
  ************************************************/
 
 
-function recognizeStudents(
-    detections
-) {
+function recognizeStudents(detections) {
 
-    results.innerHTML =
-        "";
+    /*
+     * No faces
+     */
 
+    if (detections.length === 0) {
 
-    if(
-        detections.length === 0
-    ) {
+        results.innerHTML = "";
 
         message.textContent =
             "Looking for students...";
-
 
         return;
 
     }
 
 
-    detections.forEach(
+    /*
+     * Do not clear the current
+     * attendance confirmation
+     * while a student is being processed.
+     */
 
-        function(detection) {
+    detections.forEach(function(detection) {
 
-            let bestMatch =
-                null;
-
-
-            if(
-                faceMatcher
-            ) {
-
-                bestMatch =
-                    faceMatcher.findBestMatch(
-
-                        detection.descriptor
-
-                    );
-
-            }
+        let bestMatch = null;
 
 
-            if(
+        /*
+         * FACE MATCHING
+         */
 
-                !bestMatch ||
+        if (faceMatcher) {
 
-                bestMatch.label ===
-                "unknown"
-
-            ) {
-
-                showUnknown();
-
-                return;
-
-            }
-
-
-            const student =
-                students.find(
-
-                    function(s) {
-
-                        return String(
-                            s.lrn
-                        ) ===
-
-                        String(
-                            bestMatch.label
-                        );
-
-                    }
-
+            bestMatch =
+                faceMatcher.findBestMatch(
+                    detection.descriptor
                 );
-
-
-            if(
-                !student
-            ) {
-
-                showUnknown();
-
-                return;
-
-            }
-
-
-            const distance =
-                bestMatch.distance;
-
-
-            /*
-             * Convert distance to
-             * approximate similarity.
-             */
-
-            let similarity =
-
-                Math.max(
-
-                    0,
-
-                    Math.min(
-
-                        100,
-
-                        Math.round(
-
-                            (1 - distance) *
-                            100
-
-                        )
-
-                    )
-
-                );
-
-
-            showStudent(
-
-                student,
-
-                similarity
-
-            );
 
         }
 
-    );
+
+        /*
+         * UNKNOWN FACE
+         */
+
+        if (
+            !bestMatch ||
+            bestMatch.label === "unknown"
+        ) {
+
+            /*
+             * Only show UNKNOWN if
+             * there is no active attendance
+             * confirmation.
+             */
+
+            if (
+                attendanceLocks.size === 0
+            ) {
+
+                showUnknown();
+
+            }
+
+            return;
+
+        }
+
+
+        /*
+         * FIND STUDENT
+         */
+
+        const student =
+            students.find(function(s) {
+
+                return String(s.lrn) ===
+                       String(bestMatch.label);
+
+            });
+
+
+        if (!student) {
+
+            return;
+
+        }
+
+
+        /*
+         * CALCULATE MATCH
+         */
+
+        const distance =
+            bestMatch.distance;
+
+
+        const similarity =
+
+            Math.max(
+
+                0,
+
+                Math.min(
+
+                    100,
+
+                    Math.round(
+                        (1 - distance) * 100
+                    )
+
+                )
+
+            );
+
+
+        /*
+         * SHOW STUDENT
+         *
+         * showStudent() will trigger
+         * attendance recording.
+         */
+
+        showStudent(
+            student,
+            similarity
+        );
+
+    });
 
 }
-
 
 
 /************************************************
@@ -1615,6 +1615,30 @@ function showStudent(
     student,
     similarity
 ) {
+
+    /*
+     * If this student is already being processed,
+     * don't redraw the normal student card.
+     *
+     * This allows the PRESENT confirmation
+     * to remain visible.
+     */
+
+    const lrn =
+        String(student.lrn).trim();
+
+
+    if (
+        attendanceLocks.has(lrn)
+    ) {
+
+        return;
+
+    }
+
+
+    results.innerHTML = "";
+
 
     const div =
         document.createElement(
@@ -1645,11 +1669,10 @@ function showStudent(
 
                 <br>
 
-                Grade
+                Grade:
                 ${escapeHTML(student.grade)}
 
                 -
-
                 ${escapeHTML(student.section)}
 
             </div>
@@ -1672,6 +1695,12 @@ function showStudent(
 
     message.textContent =
         "Student recognized.";
+
+
+    /*
+     * RECORD ATTENDANCE
+     */
+
     recordStudentAttendance(student);
 
 }
