@@ -1470,30 +1470,18 @@ function drawResults(
  * RECOGNIZE STUDENTS
  ************************************************/
 
-
 function recognizeStudents(detections) {
 
-    /*
-     * No faces
-     */
-
-    if (detections.length === 0) {
-
-        results.innerHTML = "";
-
-        message.textContent =
-            "Looking for students...";
-
-        return;
-
-    }
+    const now = Date.now();
 
 
     /*
-     * Do not clear the current
-     * attendance confirmation
-     * while a student is being processed.
+     * Keep track of students detected
+     * during this camera frame.
      */
+
+    const detectedLRNs = new Set();
+
 
     detections.forEach(function(detection) {
 
@@ -1523,20 +1511,6 @@ function recognizeStudents(detections) {
             bestMatch.label === "unknown"
         ) {
 
-            /*
-             * Only show UNKNOWN if
-             * there is no active attendance
-             * confirmation.
-             */
-
-            if (
-                attendanceLocks.size === 0
-            ) {
-
-                showUnknown();
-
-            }
-
             return;
 
         }
@@ -1549,8 +1523,8 @@ function recognizeStudents(detections) {
         const student =
             students.find(function(s) {
 
-                return String(s.lrn) ===
-                       String(bestMatch.label);
+                return String(s.lrn).trim() ===
+                       String(bestMatch.label).trim();
 
             });
 
@@ -1562,8 +1536,114 @@ function recognizeStudents(detections) {
         }
 
 
+        const lrn =
+            String(student.lrn).trim();
+
+
+        detectedLRNs.add(lrn);
+
+
         /*
-         * CALCULATE MATCH
+         * GET CURRENT FACE STATE
+         */
+
+        let faceState =
+            activeFaces.get(lrn);
+
+
+        if (!faceState) {
+
+            faceState = {
+
+                count: 0,
+
+                lastSeen: now,
+
+                student: student,
+
+                processing: false
+
+            };
+
+        }
+
+
+        /*
+         * UPDATE FACE STATE
+         */
+
+        faceState.count++;
+
+        faceState.lastSeen = now;
+
+        faceState.student = student;
+
+
+        activeFaces.set(
+            lrn,
+            faceState
+        );
+
+
+        /*
+         * WAIT UNTIL FACE IS STABLE
+         *
+         * This helps prevent false
+         * recognition from a single frame.
+         */
+
+        if (
+            faceState.count <
+            requiredStableDetections
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+         * ALREADY BEING PROCESSED
+         */
+
+        if (
+            faceState.processing
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+         * STUDENT ALREADY LOCKED
+         */
+
+        if (
+            attendanceLocks.has(lrn)
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+         * MARK AS PROCESSING
+         */
+
+        faceState.processing =
+            true;
+
+
+        activeFaces.set(
+            lrn,
+            faceState
+        );
+
+
+        /*
+         * MATCH SCORE
          */
 
         const distance =
@@ -1591,9 +1671,6 @@ function recognizeStudents(detections) {
 
         /*
          * SHOW STUDENT
-         *
-         * showStudent() will trigger
-         * attendance recording.
          */
 
         showStudent(
@@ -1603,8 +1680,36 @@ function recognizeStudents(detections) {
 
     });
 
-}
 
+    /*
+     * REMOVE STUDENTS WHO HAVE
+     * LEFT THE CAMERA VIEW
+     */
+
+    activeFaces.forEach(
+        function(faceState, lrn) {
+
+            if (
+                !detectedLRNs.has(lrn)
+            ) {
+
+                if (
+                    now -
+                    faceState.lastSeen
+                    >
+                    faceGoneTimeout
+                ) {
+
+                    activeFaces.delete(lrn);
+
+                }
+
+            }
+
+        }
+    );
+
+}
 
 /************************************************
  * SHOW STUDENT
@@ -1615,6 +1720,94 @@ function showStudent(
     student,
     similarity
 ) {
+
+    const lrn =
+        String(student.lrn).trim();
+
+
+    /*
+     * Don't display the same student
+     * again while attendance is locked.
+     */
+
+    if (
+        attendanceLocks.has(lrn)
+    ) {
+
+        return;
+
+    }
+
+
+    results.innerHTML = "";
+
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.className =
+        "student";
+
+
+    div.innerHTML = `
+
+        <div class="student-icon">
+            👤
+        </div>
+
+        <div class="student-info">
+
+            <div class="student-name">
+                ${escapeHTML(student.name)}
+            </div>
+
+            <div class="student-details">
+
+                LRN:
+                ${escapeHTML(student.lrn)}
+
+                <br>
+
+                Grade:
+                ${escapeHTML(student.grade)}
+
+                -
+                ${escapeHTML(student.section)}
+
+            </div>
+
+        </div>
+
+        <div class="match">
+
+            ✓ ${similarity}%
+
+        </div>
+
+    `;
+
+
+    results.appendChild(
+        div
+    );
+
+
+    message.textContent =
+        "Student recognized.";
+
+
+    /*
+     * RECORD ATTENDANCE
+     */
+
+    recordStudentAttendance(
+        student
+    );
+
+}
 
     /*
      * If this student is already being processed,
@@ -1715,7 +1908,18 @@ function showStudent(
 
 const attendanceLocks = new Set();
 
-const recognitionCooldown = 5000;
+    // Students currently visible/being processed
+const activeFaces = new Map();
+
+// How long a face must disappear before
+// the system considers that student gone
+const faceGoneTimeout = 1500;
+
+// Minimum number of consecutive detections
+// before recognizing a student
+const requiredStableDetections = 2;
+
+const recognitionCooldown = 3000;
 
 
 /************************************************
