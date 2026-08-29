@@ -1672,10 +1672,161 @@ function showStudent(
 
     message.textContent =
         "Student recognized.";
+    recordStudentAttendance(student);
 
 }
 
+/************************************************
+ * RECORD STUDENT ATTENDANCE
+ ************************************************/
 
+const attendanceLocks =
+    new Set();
+
+
+async function recordStudentAttendance(student) {
+
+    /*
+     * Prevent repeated scans
+     */
+
+    const lrn =
+        String(
+            student.lrn
+        );
+
+
+    if (
+        attendanceLocks.has(lrn)
+    ) {
+
+        return;
+
+    }
+
+
+    attendanceLocks.add(lrn);
+
+
+    try {
+
+        const response =
+            await fetch(
+
+                API_URL,
+
+                {
+
+                    method:
+                        "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "text/plain;charset=utf-8"
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            action:
+                                "recordAttendance",
+
+                            lrn:
+                                student.lrn,
+
+                            name:
+                                student.name,
+
+                            grade:
+                                student.grade,
+
+                            section:
+                                student.section
+
+                        })
+
+                }
+
+            );
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "Attendance response:",
+            data
+        );
+
+
+        if (
+            data.success
+        ) {
+
+            if (
+                data.duplicate
+            ) {
+
+                message.textContent =
+                    student.name +
+                    " — already marked PRESENT today.";
+
+            }
+
+            else {
+
+                message.textContent =
+                    "✓ " +
+                    student.name +
+                    " — PRESENT";
+
+            }
+
+        }
+
+
+        else {
+
+            console.error(
+                data.message
+            );
+
+        }
+
+    }
+
+
+    catch(error) {
+
+        console.error(
+            "Attendance error:",
+            error
+        );
+
+    }
+
+
+    /*
+     * Allow this student to be
+     * recognized again after 8 seconds.
+     */
+
+    setTimeout(
+
+        function() {
+
+            attendanceLocks.delete(lrn);
+
+        },
+
+        8000
+
+    );
+
+}
 
 /************************************************
  * SHOW UNKNOWN
