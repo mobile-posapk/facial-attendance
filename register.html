@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Register Student</title>
+
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #111827;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    padding: 18px;
+    background: #1f2937;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 21px;
+}
+
+header p {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 15px;
+}
+
+.card {
+    background: #1f2937;
+    border-radius: 15px;
+    padding: 18px;
+    margin-bottom: 15px;
+}
+
+.card h2 {
+    margin-top: 0;
+    font-size: 17px;
+}
+
+.form-group {
+    margin-bottom: 12px;
+}
+
+label {
+    display: block;
+    font-size: 12px;
+    color: #d1d5db;
+    margin-bottom: 5px;
+}
+
+input {
+    width: 100%;
+    padding: 13px;
+    border-radius: 8px;
+    border: 1px solid #4b5563;
+    background: #111827;
+    color: white;
+    font-size: 15px;
+}
+
+.camera {
+    position: relative;
+    background: black;
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+video {
+    width: 100%;
+    display: block;
+}
+
+canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.camera-status {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+
+    padding: 8px 13px;
+
+    background: rgba(0,0,0,.75);
+
+    border-radius: 20px;
+
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+button {
+    flex: 1;
+    padding: 14px;
+
+    border: none;
+    border-radius: 8px;
+
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#startCamera {
+    background: #16a34a;
+    color: white;
+}
+
+#captureFace {
+    background: #2563eb;
+    color: white;
+}
+
+#saveStudent {
+    background: #9333ea;
+    color: white;
+}
+
+button:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+.result {
+    margin-top: 12px;
+    padding: 13px;
+
+    background: #111827;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+}
+
+.success {
+    color: #4ade80;
+}
+
+.warning {
+    color: #facc15;
+}
+
+.error {
+    color: #f87171;
+}
+
+@media(max-width:600px) {
+
+    .controls {
+        flex-direction: column;
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+<h1>
+STUDENT FACE REGISTRATION
+</h1>
+
+<p>
+REGISTER STUDENT FACIAL ID
+</p>
+
+</header>
+
+
+<div class="container">
+
+
+<!-- STUDENT INFORMATION -->
+
+<div class="card">
+
+<h2>
+Student Information
+</h2>
+
+
+<div class="form-group">
+
+<label>
+LRN
+</label>
+
+<input
+    id="lrn"
+    type="text"
+    placeholder="Enter LRN"
+>
+
+
+</div>
+
+
+<div class="form-group">
+
+<label>
+STUDENT NAME
+</label>
+
+<input
+    id="name"
+    type="text"
+    placeholder="Enter complete name"
+>
+
+
+</div>
+
+
+<div class="form-group">
+
+<label>
+GRADE
+</label>
+
+<input
+    id="grade"
+    type="text"
+    placeholder="Example: 9"
+>
+
+
+</div>
+
+
+<div class="form-group">
+
+<label>
+SECTION
+</label>
+
+<input
+    id="section"
+    type="text"
+    placeholder="Example: Rizal"
+>
+
+
+</div>
+
+</div>
+
+
+
+<!-- CAMERA -->
+
+<div class="card">
+
+<h2>
+Face Capture
+</h2>
+
+
+<div class="camera">
+
+<video
+    id="video"
+    autoplay
+    muted
+    playsinline
+></video>
+
+
+<canvas
+    id="canvas"
+></canvas>
+
+
+<div
+    id="cameraStatus"
+    class="camera-status"
+>
+
+CAMERA OFF
+
+</div>
+
+</div>
+
+
+<div class="controls">
+
+<button
+    id="startCamera"
+>
+
+▶ START CAMERA
+
+</button>
+
+
+<button
+    id="captureFace"
+    disabled
+>
+
+📸 CAPTURE FACE
+
+</button>
+
+</div>
+
+
+<div
+    id="result"
+    class="result"
+>
+
+Waiting for camera...
+
+</div>
+
+</div>
+
+
+
+<!-- SAVE -->
+
+<div class="card">
+
+<button
+    id="saveStudent"
+    disabled
+>
+
+💾 SAVE STUDENT
+
+</button>
+
+</div>
+
+
+</div>
+
+
+<script>
+
+
+/* ==========================================
+   VARIABLES
+========================================== */
+
+let stream = null;
+
+let faceDescriptor = null;
+
+let modelsLoaded = false;
+
+
+/* ==========================================
+   ELEMENTS
+========================================== */
+
+const video =
+    document.getElementById(
+        "video"
+    );
+
+const canvas =
+    document.getElementById(
+        "canvas"
+    );
+
+const cameraStatus =
+    document.getElementById(
+        "cameraStatus"
+    );
+
+const result =
+    document.getElementById(
+        "result"
+    );
+
+const startCamera =
+    document.getElementById(
+        "startCamera"
+    );
+
+const captureFace =
+    document.getElementById(
+        "captureFace"
+    );
+
+const saveStudent =
+    document.getElementById(
+        "saveStudent"
+    );
+
+
+/* ==========================================
+   LOAD FACE MODELS
+========================================== */
+
+async function loadModels() {
+
+    result.textContent =
+        "Loading facial recognition models...";
+
+
+    try {
+
+        const MODEL_URL =
+            "https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights";
+
+
+        await faceapi.nets.tinyFaceDetector.loadFromUri(
+            MODEL_URL
+        );
+
+
+        await faceapi.nets.faceLandmark68Net.loadFromUri(
+            MODEL_URL
+        );
+
+
+        await faceapi.nets.faceRecognitionNet.loadFromUri(
+            MODEL_URL
+        );
+
+
+        modelsLoaded = true;
+
+
+        result.innerHTML =
+            '<span class="success">' +
+            '✓ Facial recognition model ready.' +
+            '</span>';
+
+
+    }
+
+    catch(error) {
+
+        console.error(error);
+
+
+        result.innerHTML =
+            '<span class="error">' +
+            'Unable to load facial recognition model.' +
+            '</span>';
+
+    }
+
+}
+
+
+/* ==========================================
+   START CAMERA
+========================================== */
+
+async function startCameraFunction() {
+
+    try {
+
+        if(!modelsLoaded) {
+
+            result.textContent =
+                "Please wait for the recognition model to load.";
+
+            return;
+
+        }
+
+
+        stream =
+            await navigator
+                .mediaDevices
+                .getUserMedia({
+
+                    video: {
+
+                        facingMode: {
+                            ideal: "environment"
+                        },
+
+                        width: {
+                            ideal: 1280
+                        },
+
+                        height: {
+                            ideal: 720
+                        }
+
+                    },
+
+                    audio: false
+
+                });
+
+
+        video.srcObject =
+            stream;
+
+
+        await video.play();
+
+
+        cameraStatus.textContent =
+            "CAMERA ACTIVE";
+
+
+        captureFace.disabled =
+            false;
+
+
+        result.textContent =
+            "Position one student's face inside the camera.";
+
+
+    }
+
+    catch(error) {
+
+        console.error(error);
+
+
+        result.innerHTML =
+            '<span class="error">' +
+            error.name +
+            ': ' +
+            error.message +
+            '</span>';
+
+    }
+
+}
+
+
+/* ==========================================
+   CAPTURE FACE
+========================================== */
+
+async function captureFaceFunction() {
+
+    if(!modelsLoaded) {
+
+        return;
+
+    }
+
+
+    result.textContent =
+        "Detecting face...";
+
+
+    try {
+
+
+        const detection =
+            await faceapi
+                .detectSingleFace(
+                    video,
+                    new faceapi.TinyFaceDetectorOptions({
+                        inputSize: 320,
+                        scoreThreshold: 0.5
+                    })
+                )
+                .withFaceLandmarks()
+                .withFaceDescriptor();
+
+
+        if(!detection) {
+
+            result.innerHTML =
+                '<span class="warning">' +
+                '⚠ No face detected. Please position the student clearly in front of the camera.' +
+                '</span>';
+
+            return;
+
+        }
+
+
+        faceDescriptor =
+            Array.from(
+                detection.descriptor
+            );
+
+
+        /* DRAW DETECTION */
+
+        const displaySize = {
+
+            width: video.videoWidth,
+
+            height: video.videoHeight
+
+        };
+
+
+        canvas.width =
+            displaySize.width;
+
+        canvas.height =
+            displaySize.height;
+
+
+        const resized =
+            faceapi.resizeResults(
+                detection,
+                displaySize
+            );
+
+
+        const ctx =
+            canvas.getContext("2d");
+
+
+        ctx.clearRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+
+        faceapi.draw.drawDetections(
+            canvas,
+            resized
+        );
+
+
+        result.innerHTML =
+            '<span class="success">' +
+            '✓ Face captured successfully.' +
+            '</span>' +
+            '<br><br>' +
+            'You can now save the student.';
+
+
+        saveStudent.disabled =
+            false;
+
+
+    }
+
+    catch(error) {
+
+        console.error(error);
+
+
+        result.innerHTML =
+            '<span class="error">' +
+            'Face capture failed.' +
+            '</span>';
+
+    }
+
+}
+
+
+/* ==========================================
+   SAVE STUDENT
+========================================== */
+
+function saveStudentFunction() {
+
+
+    const lrn =
+        document
+            .getElementById("lrn")
+            .value
+            .trim();
+
+
+    const name =
+        document
+            .getElementById("name")
+            .value
+            .trim();
+
+
+    const grade =
+        document
+            .getElementById("grade")
+            .value
+            .trim();
+
+
+    const section =
+        document
+            .getElementById("section")
+            .value
+            .trim();
+
+
+    if(!lrn) {
+
+        alert("Please enter the LRN.");
+
+        return;
+
+    }
+
+
+    if(!name) {
+
+        alert("Please enter the student's name.");
+
+        return;
+
+    }
+
+
+    if(!grade) {
+
+        alert("Please enter the grade.");
+
+        return;
+
+    }
+
+
+    if(!section) {
+
+        alert("Please enter the section.");
+
+        return;
+
+    }
+
+
+    if(!faceDescriptor) {
+
+        alert("Please capture the student's face.");
+
+        return;
+
+    }
+
+
+    /*
+       TEMPORARY STORAGE
+
+       For this module we store the
+       student locally.
+
+       In the next module we will
+       send this to Google Apps Script
+       and Google Sheets.
+    */
+
+
+    const student = {
+
+        lrn: lrn,
+
+        name: name,
+
+        grade: grade,
+
+        section: section,
+
+        faceDescriptor: faceDescriptor,
+
+        createdAt:
+            new Date().toISOString()
+
+    };
+
+
+    const students =
+        JSON.parse(
+            localStorage.getItem(
+                "registeredStudents"
+            ) || "[]"
+        );
+
+
+    students.push(student);
+
+
+    localStorage.setItem(
+        "registeredStudents",
+        JSON.stringify(students)
+    );
+
+
+    result.innerHTML =
+        '<span class="success">' +
+        '✓ STUDENT REGISTERED SUCCESSFULLY' +
+        '</span>' +
+        '<br><br>' +
+        name;
+
+
+    saveStudent.disabled =
+        true;
+
+
+    faceDescriptor =
+        null;
+
+}
+
+
+/* ==========================================
+   EVENTS
+========================================== */
+
+startCamera.addEventListener(
+    "click",
+    startCameraFunction
+);
+
+
+captureFace.addEventListener(
+    "click",
+    captureFaceFunction
+);
+
+
+saveStudent.addEventListener(
+    "click",
+    saveStudentFunction
+);
+
+
+/* ==========================================
+   LOAD MODELS
+========================================== */
+
+loadModels();
+
+</script>
+
+
+</body>
+
+</html>
