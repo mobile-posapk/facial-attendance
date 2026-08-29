@@ -333,7 +333,7 @@ CAMERA OFF
         id="captureFace"
         disabled
     >
-        📸 CAPTURE FACE
+        📸 CAPTURE SAMPLE
     </button>
 
     <button
@@ -352,6 +352,16 @@ CAMERA OFF
 Waiting for camera...
 
 </div>
+
+</div>
+
+    <div
+    id="sampleProgress"
+    class="result"
+>
+
+    Face Samples:
+    <strong>0 / 5</strong>
 
 </div>
 
@@ -385,7 +395,7 @@ Waiting for camera...
 
 let stream = null;
 
-let faceDescriptor = null;
+let faceDescriptors = [];
 
 let modelsLoaded = false;
 
@@ -646,7 +656,30 @@ async function startCameraFunction() {
 
 async function captureFaceFunction() {
 
-    if(!modelsLoaded) {
+    if (!modelsLoaded) {
+
+        result.textContent =
+            "Facial recognition model is not ready.";
+
+        return;
+
+    }
+
+
+    if (!stream) {
+
+        result.textContent =
+            "Please start the camera first.";
+
+        return;
+
+    }
+
+
+    if (faceDescriptors.length >= 5) {
+
+        result.textContent =
+            "All 5 face samples have already been captured.";
 
         return;
 
@@ -658,7 +691,6 @@ async function captureFaceFunction() {
 
 
     try {
-
 
         const detection =
             await faceapi
@@ -673,7 +705,7 @@ async function captureFaceFunction() {
                 .withFaceDescriptor();
 
 
-        if(!detection) {
+        if (!detection) {
 
             result.innerHTML =
                 '<span class="warning">' +
@@ -685,19 +717,58 @@ async function captureFaceFunction() {
         }
 
 
-        faceDescriptor =
+        /*
+         * CHECK FACE SIZE
+         */
+
+        const box =
+            detection.detection.box;
+
+
+        if (
+            box.width < 100 ||
+            box.height < 100
+        ) {
+
+            result.innerHTML =
+                '<span class="warning">' +
+                '⚠ Move closer to the camera.' +
+                '</span>';
+
+            return;
+
+        }
+
+
+        /*
+         * SAVE FACE DESCRIPTOR
+         */
+
+        faceDescriptors.push(
             Array.from(
                 detection.descriptor
-            );
+            )
+        );
 
 
-        /* DRAW DETECTION */
+        /*
+         * UPDATE PROGRESS
+         */
+
+        updateSampleProgress();
+
+
+        /*
+         * DRAW FACE BOX
+         */
 
         const displaySize = {
 
-            width: video.videoWidth,
+            width:
+                video.videoWidth,
 
-            height: video.videoHeight
+            height:
+                video.videoHeight
 
         };
 
@@ -734,17 +805,43 @@ async function captureFaceFunction() {
         );
 
 
-        result.innerHTML =
-            '<span class="success">' +
-            '✓ Face captured successfully.' +
-            '</span>' +
-            '<br><br>' +
-            'You can now save the student.';
+        /*
+         * SHOW INSTRUCTION
+         */
+
+        if (
+            faceDescriptors.length < 5
+        ) {
+
+            result.innerHTML =
+                '<span class="success">' +
+                '✓ Sample ' +
+                faceDescriptors.length +
+                ' captured.' +
+                '</span>' +
+                '<br><br>' +
+                getNextInstruction();
+
+        }
+
+        else {
+
+            result.innerHTML =
+                '<span class="success">' +
+                '✓ ALL 5 FACE SAMPLES CAPTURED.' +
+                '</span>' +
+                '<br><br>' +
+                'The student facial profile is ready.';
 
 
-        saveStudent.disabled =
-            false;
+            saveStudent.disabled =
+                false;
 
+
+            captureFace.disabled =
+                true;
+
+        }
 
     }
 
@@ -762,6 +859,60 @@ async function captureFaceFunction() {
 
 }
 
+    function updateSampleProgress() {
+
+    const progress =
+        document.getElementById(
+            "sampleProgress"
+        );
+
+
+    progress.innerHTML =
+        "Face Samples: " +
+        "<strong>" +
+        faceDescriptors.length +
+        " / 5" +
+        "</strong>";
+
+}
+
+    function getNextInstruction() {
+
+    const count =
+        faceDescriptors.length;
+
+
+    if (count === 1) {
+
+        return "Sample 2: Turn your face slightly LEFT.";
+
+    }
+
+
+    if (count === 2) {
+
+        return "Sample 3: Turn your face slightly RIGHT.";
+
+    }
+
+
+    if (count === 3) {
+
+        return "Sample 4: Look slightly UP.";
+
+    }
+
+
+    if (count === 4) {
+
+        return "Sample 5: Look slightly DOWN.";
+
+    }
+
+
+    return "";
+
+}
 
 /* ==========================================
    SAVE STUDENT
@@ -834,13 +985,15 @@ function saveStudentFunction() {
     }
 
 
-    if(!faceDescriptor) {
+    if (faceDescriptors.length < 5) {
 
-        alert("Please capture the student's face.");
+    alert(
+        "Please capture all 5 face samples first."
+    );
 
-        return;
+    return;
 
-    }
+}
 
 
     /*
@@ -865,7 +1018,7 @@ function saveStudentFunction() {
 
         section: section,
 
-        faceDescriptor: faceDescriptor,
+        faceDescriptors: faceDescriptors,
 
         createdAt:
             new Date().toISOString()
@@ -902,8 +1055,9 @@ function saveStudentFunction() {
         true;
 
 
-    faceDescriptor =
-        null;
+   faceDescriptors = [];
+
+updateSampleProgress();
 
 }
 
